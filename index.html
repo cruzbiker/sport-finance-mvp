@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESS Modesto - Panel Deportivo y Financiero</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Cliente oficial de Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-6 font-sans">
+  <div class="max-w-6xl mx-auto space-y-6">
+    
+    <!-- Encabezado -->
+    <header class="flex flex-col md:flex-row md:items-center md:justify-between border-b border-slate-700 pb-4">
+      <div>
+        <h1 class="text-2xl font-bold tracking-tight text-emerald-400">Panel Deportivo & Financiero</h1>
+        <p class="text-sm text-slate-400">Datos conectados a tu nube de Supabase</p>
+      </div>
+      <div class="mt-4 md:mt-0 flex items-center space-x-3">
+        <label class="text-xs text-slate-400 uppercase">Presupuesto Anual (€):</label>
+        <input id="clubBudget" type="number" value="120000" onchange="guardarPresupuesto()" 
+               class="bg-slate-800 border border-slate-600 rounded px-3 py-1 text-right text-emerald-400 font-semibold focus:outline-none focus:border-emerald-400">
+      </div>
+    </header>
+
+    <!-- Métricas Generales -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+        <p class="text-xs text-slate-400 uppercase font-semibold">Gasto Total en Plantilla</p>
+        <p id="totalSalaries" class="text-2xl font-bold mt-1">0 €</p>
+      </div>
+      <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+        <p class="text-xs text-slate-400 uppercase font-semibold">% Masa Salarial</p>
+        <div class="flex items-center space-x-2 mt-1">
+          <p id="salaryPercentage" class="text-2xl font-bold">0%</p>
+          <span id="salaryBadge" class="text-xs px-2 py-0.5 rounded font-medium"></span>
+        </div>
+      </div>
+      <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+        <p class="text-xs text-slate-400 uppercase font-semibold">Coste Medio por Minuto</p>
+        <p id="avgCostPerMinute" class="text-2xl font-bold mt-1 text-slate-300">0 €/min</p>
+      </div>
+    </section>
+
+    <!-- Formulario para Añadir Jugador -->
+    <section class="bg-slate-800/60 p-4 rounded-xl border border-slate-700">
+      <h2 class="text-sm font-semibold uppercase text-slate-300 mb-3">Registrar Jugador en la Base de Datos</h2>
+      <form id="playerForm" onsubmit="agregarJugador(event)" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+        <input id="playerName" type="text" placeholder="Nombre completo" required class="bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm">
+        <select id="playerPosition" class="bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm">
+          <option>Portero</option>
+          <option>Defensa</option>
+          <option>Centrocampista</option>
+          <option>Delantero</option>
+        </select>
+        <input id="playerSalary" type="number" placeholder="Salario Anual (€)" required class="bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm">
+        <input id="playerMinutes" type="number" placeholder="Minutos jugados" required class="bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm">
+        <button id="submitBtn" type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded px-4 py-1.5 text-sm transition">
+          + Guardar Jugador
+        </button>
+      </form>
+    </section>
+
+    <!-- Tabla de Jugadores -->
+    <section class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+      <div class="p-4 border-b border-slate-700 flex justify-between items-center">
+        <h2 class="font-semibold text-slate-200">Plantilla Registrada</h2>
+        <span id="loadingStatus" class="text-xs text-slate-400">Cargando datos...</span>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead class="bg-slate-900/60 text-slate-400 uppercase text-xs">
+            <tr>
+              <th class="p-3">Jugador</th>
+              <th class="p-3">Posición</th>
+              <th class="p-3 text-right">Salario Anual</th>
+              <th class="p-3 text-right">Minutos Estimados</th>
+              <th class="p-3 text-right">Coste / Minuto</th>
+              <th class="p-3 text-center">Diagnóstico</th>
+              <th class="p-3 text-center">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="playerTableBody" class="divide-y divide-slate-700"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // --- 1. CREDENCIALES DE SUPABASE ---
+    // Tu Project URL real identificada previamente: https://ouznpnpiuxonieduxrye.supabase.co
+    const SUPABASE_URL = "https://ouznpnpiuxonieduxrye.supabase.co";
+    // Tu Publishable key (sb_publishable_...)
+    const SUPABASE_ANON_KEY = "sb_publishable_NPk9F0NmaVU9emfm-aJIUA_lU_1v-Ve";
+    
+    const DEFAULT_CLUB_ID = '11111111-1111-1111-1111-111111111111';
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let jugadoresLocales = [];
+
+    // Cargar datos al abrir la página
+    async function cargarDatos() {
+      document.getElementById('loadingStatus').innerText = "Sincronizando con Supabase...";
+      
+      try {
+        // Cargar presupuesto del club
+        const { data: club, error: errClub } = await supabaseClient
+          .from('clubs')
+          .select('total_budget')
+          .eq('id', DEFAULT_CLUB_ID)
+          .maybeSingle();
+          
+        if (club && club.total_budget) {
+          document.getElementById('clubBudget').value = club.total_budget;
+        }
+
+        // Cargar jugadores
+        const { data: players, error: errPlayers } = await supabaseClient
+          .from('players')
+          .select('*')
+          .eq('club_id', DEFAULT_CLUB_ID);
+
+        if (errPlayers) {
+          console.error("Error cargando jugadores:", errPlayers);
+          document.getElementById('loadingStatus').innerText = "Error: " + errPlayers.message;
+          return;
+        }
+
+        jugadoresLocales = players || [];
+        document.getElementById('loadingStatus').innerText = `${jugadoresLocales.length} jugadores cargados`;
+        renderizarVista();
+      } catch (e) {
+        console.error("Excepción al conectar:", e);
+        document.getElementById('loadingStatus').innerText = "Error de conexión con Supabase.";
+      }
+    }
+
+    function renderizarVista() {
+      const budget = parseFloat(document.getElementById('clubBudget').value) || 1;
+      const totalSalarios = jugadoresLocales.reduce((acc, j) => acc + Number(j.annual_salary), 0);
+      const totalMinutos = jugadoresLocales.reduce((acc, j) => acc + (j.temp_minutes || 900), 0);
+      
+      const pctPresupuesto = (totalSalarios / budget) * 100;
+      
+      document.getElementById('totalSalaries').innerText = totalSalarios.toLocaleString('es-ES') + " €";
+      document.getElementById('salaryPercentage').innerText = pctPresupuesto.toFixed(1) + "%";
+      
+      const badge = document.getElementById('salaryBadge');
+      if (pctPresupuesto <= 60) {
+        badge.innerText = "Saludable (<60%)";
+        badge.className = "text-xs px-2 py-0.5 rounded font-medium bg-emerald-900/80 text-emerald-300 border border-emerald-700";
+      } else if (pctPresupuesto <= 70) {
+        badge.innerText = "Precaución (60-70%)";
+        badge.className = "text-xs px-2 py-0.5 rounded font-medium bg-yellow-900/80 text-yellow-300 border border-yellow-700";
+      } else {
+        badge.innerText = "Riesgo (>70%)";
+        badge.className = "text-xs px-2 py-0.5 rounded font-medium bg-red-900/80 text-red-300 border border-red-700";
+      }
+
+      const mediaCosteMinuto = totalMinutos > 0 ? (totalSalarios / totalMinutos) : 0;
+      document.getElementById('avgCostPerMinute').innerText = mediaCosteMinuto.toFixed(2) + " €/min";
+
+      const tbody = document.getElementById('playerTableBody');
+      tbody.innerHTML = "";
+
+      jugadoresLocales.forEach((j) => {
+        const mins = j.temp_minutes || 900;
+        const costeMin = mins > 0 ? (Number(j.annual_salary) / mins) : Number(j.annual_salary);
+        let estadoBadge = '';
+
+        if (costeMin > 35) {
+          estadoBadge = '<span class="px-2 py-0.5 text-xs rounded bg-red-900/40 text-red-400 border border-red-800">Sobrecoste</span>';
+        } else if (costeMin > 15) {
+          estadoBadge = '<span class="px-2 py-0.5 text-xs rounded bg-yellow-900/40 text-yellow-400 border border-yellow-800">Equilibrado</span>';
+        } else {
+          estadoBadge = '<span class="px-2 py-0.5 text-xs rounded bg-emerald-900/40 text-emerald-400 border border-emerald-800">Eficiente</span>';
+        }
+
+        tbody.innerHTML += `
+          <tr class="hover:bg-slate-700/40">
+            <td class="p-3 font-medium text-slate-200">${j.full_name}</td>
+            <td class="p-3 text-slate-400">${j.position}</td>
+            <td class="p-3 text-right">${Number(j.annual_salary).toLocaleString('es-ES')} €</td>
+            <td class="p-3 text-right">${mins} min</td>
+            <td class="p-3 text-right font-semibold text-slate-200">${costeMin.toFixed(2)} €/min</td>
+            <td class="p-3 text-center">${estadoBadge}</td>
+            <td class="p-3 text-center">
+              <button onclick="eliminarJugador('${j.id}')" class="text-xs text-rose-400 hover:text-rose-300">Eliminar</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    async function agregarJugador(e) {
+      e.preventDefault();
+      const nombre = document.getElementById('playerName').value;
+      const posicion = document.getElementById('playerPosition').value;
+      const salario = parseFloat(document.getElementById('playerSalary').value) || 0;
+      const minutos = parseInt(document.getElementById('playerMinutes').value) || 900;
+
+      const { data, error } = await supabaseClient
+        .from('players')
+        .insert([{
+          club_id: DEFAULT_CLUB_ID,
+          full_name: nombre,
+          position: posicion,
+          annual_salary: salario
+        }])
+        .select();
+
+      if (error) {
+        alert("Error al guardar: " + error.message);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        data[0].temp_minutes = minutos;
+        jugadoresLocales.push(data[0]);
+      }
+      document.getElementById('playerForm').reset();
+      renderizarVista();
+    }
+
+    async function eliminarJugador(id) {
+      const { error } = await supabaseClient
+        .from('players')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        alert("Error al eliminar: " + error.message);
+        return;
+      }
+
+      jugadoresLocales = jugadoresLocales.filter(j => j.id !== id);
+      renderizarVista();
+    }
+
+    async function guardarPresupuesto() {
+      const nuevoPresupuesto = parseFloat(document.getElementById('clubBudget').value) || 0;
+      await supabaseClient
+        .from('clubs')
+        .update({ total_budget: nuevoPresupuesto })
+        .eq('id', DEFAULT_CLUB_ID);
+      renderizarVista();
+    }
+
+    cargarDatos();
+  </script>
+</body>
+</html>
