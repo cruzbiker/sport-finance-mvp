@@ -2,8 +2,12 @@
 <html lang="es" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>SportPlatform - Hub Deportivo & Financiero</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -11,75 +15,178 @@
       darkMode: 'class',
       theme: {
         extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
           colors: {
             brand: {
               50: '#ecfdf5',
+              100: '#d1fae5',
+              400: '#34d399',
               500: '#10b981',
               600: '#059669',
+              900: '#064e3b',
             }
           }
         }
       }
     }
   </script>
-  <!-- Chart.js para gráficos atractivos e interactivos -->
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between transition-colors duration-200">
+  
+  <style>
+    /* Estilos de contraste y paleta profesional ultra-moderna */
+    html.dark {
+      color-scheme: dark;
+    }
+    html.dark body {
+      background-color: #030712; /* Slate/Gray 950 ultra oscuro */
+      color: #f3f4f6;
+    }
+    html.dark .card-surface {
+      background-color: #0f172a; /* Slate 900 */
+      border-color: #1e293b;
+    }
+    html.dark .inner-surface {
+      background-color: #030712;
+      border-color: #1e293b;
+    }
+    html.dark .input-surface {
+      background-color: #030712;
+      border: 1px solid #1e293b;
+      color: #f9fafb;
+    }
+    html.dark .table-thead-custom {
+      background-color: #030712;
+      color: #94a3b8;
+    }
+    html.dark .text-muted-custom {
+      color: #94a3b8;
+    }
 
-  <!-- BARRA DE NAVEGACIÓN (SE OCULTA EN LA IMPRESIÓN/PDF) -->
-  <header class="no-print border-b border-slate-800 dark:border-slate-800 light:border-slate-200 bg-slate-900/90 dark:bg-slate-900/90 backdrop-blur sticky top-0 z-40 px-4 lg:px-8 py-3 flex items-center justify-between transition-colors">
-    <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-xl bg-emerald-500 text-slate-950 font-black flex items-center justify-center text-lg shadow-lg shadow-emerald-500/20">
+    /* MODO CLARO OPTIMIZADO (ALTO CONTRASTE Y LEGIBILIDAD) */
+    html.light {
+      color-scheme: light;
+    }
+    html.light body {
+      background-color: #f1f5f9; /* Fondo gris suave descansado */
+      color: #0f172a; /* Texto casi negro con máximo contraste */
+    }
+    html.light .card-surface {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important; /* Bordes nítidos */
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      color: #0f172a !important;
+    }
+    html.light .inner-surface {
+      background-color: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    html.light .input-surface {
+      background-color: #ffffff !important;
+      border: 1px solid #94a3b8 !important;
+      color: #0f172a !important;
+    }
+    html.light .input-surface:focus {
+      border-color: #059669 !important;
+      outline: 2px solid rgba(5, 150, 105, 0.2) !important;
+    }
+    html.light .table-thead-custom {
+      background-color: #e2e8f0 !important;
+      color: #1e293b !important;
+      border-bottom: 2px solid #cbd5e1 !important;
+    }
+    html.light .text-muted-custom {
+      color: #475569 !important; /* Gris oscuro muy legible */
+    }
+    html.light header {
+      background-color: #ffffff !important;
+      border-color: #cbd5e1 !important;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    }
+    html.light .badge-theme-tag {
+      background-color: #e2e8f0 !important;
+      color: #0f172a !important;
+      border-color: #cbd5e1 !important;
+    }
+    html.light .table-divide-custom > :not([hidden]) ~ :not([hidden]) {
+      border-color: #e2e8f0 !important;
+    }
+
+    /* Reglas para informe imprimible / PDF */
+    .print-only { display: none; }
+    @media print {
+      body { background-color: #fff !important; color: #000 !important; padding: 0 !important; }
+      .no-print { display: none !important; }
+      .print-only { display: block !important; }
+      .card-surface, .inner-surface { background-color: #fff !important; border-color: #d1d5db !important; box-shadow: none !important; }
+      .table-thead-custom { background-color: #f3f4f6 !important; color: #111827 !important; }
+      table { font-size: 9.5px !important; }
+      th, td { padding: 4px 6px !important; }
+    }
+  </style>
+</head>
+<body class="min-h-screen font-sans flex flex-col justify-between transition-colors duration-200 antialiased selection:bg-emerald-500 selection:text-white">
+
+  <!-- ======================================================== -->
+  <!-- BARRA DE NAVEGACIÓN PRINCIPAL -->
+  <!-- ======================================================== -->
+  <header class="no-print border-b sticky top-0 z-40 px-3 sm:px-6 lg:px-8 py-3 flex items-center justify-between transition-colors backdrop-blur-md">
+    <div class="flex items-center gap-2.5 sm:gap-3">
+      <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-slate-950 font-black flex items-center justify-center text-lg shadow-md shadow-emerald-500/20">
         SP
       </div>
       <div>
-        <h1 class="font-bold tracking-tight text-base sm:text-lg leading-tight header-title">SportPlatform</h1>
-        <p class="text-[11px] header-sub">Hub Deportivo & Financiero Multi-Club</p>
+        <h1 class="font-extrabold tracking-tight text-base sm:text-lg leading-tight">SportPlatform</h1>
+        <p class="text-[11px] text-muted-custom font-medium">Hub Deportivo & Financiero Cloud</p>
       </div>
     </div>
 
-    <!-- Indicador de Club Activo, Botón Informe PDF y Selector de Tema -->
-    <div class="flex items-center gap-2 sm:gap-3">
+    <!-- Acciones Superiores -->
+    <div class="flex items-center gap-1.5 sm:gap-3">
       <!-- Selector de Club -->
-      <div class="flex items-center gap-2 bg-slate-800/80 dark:bg-slate-800/80 club-badge-box border border-slate-700 px-3 py-1.5 rounded-full text-xs">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <select id="clubSelectorDropdown" onchange="cambiarClubSeleccionado(this.value)" class="bg-transparent text-xs font-semibold focus:outline-none cursor-pointer">
-          <option value="">Cargando clubes...</option>
+      <div class="flex items-center gap-1.5 bg-slate-800/80 dark:bg-slate-800/80 badge-theme-tag border border-slate-700 px-2 sm:px-3 py-1.5 rounded-xl text-xs">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <select id="clubSelectorDropdown" onchange="cambiarClubSeleccionado(this.value)" class="bg-transparent text-xs font-semibold focus:outline-none cursor-pointer max-w-[110px] sm:max-w-[180px] truncate">
+          <option value="">Cargando...</option>
         </select>
       </div>
 
-      <!-- Botón Exportar Informe Ejecutivo (PDF / Imprimir) -->
-      <button onclick="generarInformeEjecutivoPDF()" title="Descargar balance formal en PDF o imprimir" class="text-xs bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold px-3 py-1.5 rounded-lg transition shadow-sm flex items-center gap-1.5">
+      <!-- Botón Exportar PDF -->
+      <button onclick="generarInformeEjecutivoPDF()" title="Exportar balance PDF" class="text-xs bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold px-2.5 sm:px-3 py-1.5 rounded-xl transition shadow-sm flex items-center gap-1">
         <span>📄</span>
-        <span class="hidden md:inline">Informe Ejecutivo PDF</span>
-        <span class="md:hidden">PDF</span>
+        <span class="hidden md:inline">Informe PDF</span>
       </button>
 
       <!-- Botón Nuevo Club -->
-      <button onclick="abrirModalNuevoClub()" class="text-xs bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-3 py-1.5 rounded-lg transition shadow-sm">
+      <button onclick="abrirModalNuevoClub()" class="text-xs bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-2.5 sm:px-3 py-1.5 rounded-xl transition shadow-sm">
         + Club
       </button>
 
-      <!-- Toggle Tema (Blanco / Slate Oscuro) -->
-      <button onclick="toggleTheme()" id="themeToggleBtn" title="Cambiar tema de color" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:text-white transition flex items-center gap-1.5 text-xs font-medium">
+      <!-- Toggle Tema (Claro / Oscuro) -->
+      <button onclick="toggleTheme()" id="themeToggleBtn" title="Cambiar tema" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:text-white transition flex items-center gap-1.5 text-xs font-semibold">
         <span id="themeIcon">☀️</span>
-        <span id="themeText" class="hidden sm:inline">Modo Claro</span>
+        <span id="themeText" class="hidden lg:inline">Modo Claro</span>
       </button>
     </div>
   </header>
 
-  <!-- CONTENEDOR PRINCIPAL -->
-  <main class="max-w-7xl mx-auto w-full p-4 sm:p-6 space-y-6 flex-1">
+  <!-- ======================================================== -->
+  <!-- CONTENEDOR PRINCIPAL RESPONSIVE -->
+  <!-- ======================================================== -->
+  <main class="max-w-7xl mx-auto w-full p-3 sm:p-5 lg:p-6 space-y-6 flex-1">
 
-    <!-- CABECERA FORMAL PARA LA IMPRESIÓN/PDF (SOLO VISIBLE EN PRINT) -->
-    <div class="print-only border-b-2 border-slate-900 pb-4 mb-4">
+    <!-- CABECERA FORMAL PARA IMPRESIÓN (SOLO PRINT) -->
+    <div class="print-only border-b-2 border-slate-900 pb-3 mb-4">
       <div class="flex justify-between items-start">
         <div>
-          <h1 id="printClubTitle" class="text-2xl font-black uppercase text-slate-900">NOMBRE DEL CLUB</h1>
+          <h1 id="printClubTitle" class="text-2xl font-black uppercase text-slate-900">CLUB DEPORTIVO</h1>
           <p id="printDocSubtitle" class="text-xs text-slate-600 font-semibold mt-0.5">INFORME EJECUTIVO DE BALANCE TEMPORADA</p>
+          <p id="printClubContactDetails" class="text-[11px] text-slate-500 mt-1"></p>
         </div>
         <div class="text-right text-xs text-slate-500">
           <p><strong>Fecha emisión:</strong> <span id="printDate">--/--/----</span></p>
@@ -88,167 +195,218 @@
       </div>
     </div>
 
-    <!-- BANNER DEL CLUB ACTIVO -->
-    <div id="clubHeaderBanner" class="p-5 rounded-2xl border flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all">
-      <div>
-        <div class="flex items-center gap-2">
-          <span id="clubTypeBadge" class="text-xs font-bold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-            Fútbol Base
-          </span>
-          <span id="clubCategoryBadge" class="text-xs text-slate-400 font-medium">Cadete</span>
+    <!-- ======================================================== -->
+    <!-- MEJORA 1: BANNER DEL CLUB CON DATOS COMPLETOS Y EDICIÓN -->
+    <!-- ======================================================== -->
+    <section class="card-surface p-4 sm:p-6 rounded-3xl border transition-all relative overflow-hidden">
+      <!-- Glow decorativo sutil -->
+      <div class="absolute -right-16 -top-16 w-56 h-56 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 relative z-10">
+        <div class="space-y-2">
+          <div class="flex flex-wrap items-center gap-2">
+            <span id="clubTypeBadge" class="text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              Fútbol Base
+            </span>
+            <span id="clubCategoryBadge" class="text-[11px] text-muted-custom font-semibold">Cadete</span>
+            <span class="text-slate-400 text-xs hidden sm:inline">•</span>
+            <span id="clubFoundationBadge" class="text-[11px] text-muted-custom">Fundación: --</span>
+          </div>
+
+          <h2 id="currentClubTitle" class="text-2xl sm:text-3xl font-black tracking-tight">Cargando club...</h2>
+          
+          <!-- Metadatos de contacto del Club (Dirección con Google Maps, Tel, Web, Email, Campo) -->
+          <div id="clubContactDetailsRow" class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-custom pt-1">
+            <span id="clubAddressDisplay" class="flex items-center gap-1 font-medium">
+              📍 <span id="clubAddressText">Sin dirección</span>
+            </span>
+            <span id="clubPhoneDisplay" class="flex items-center gap-1 font-medium">
+              📞 <span id="clubPhoneText">--</span>
+            </span>
+            <span id="clubEmailDisplay" class="flex items-center gap-1 font-medium">
+              ✉️ <span id="clubEmailText">--</span>
+            </span>
+            <span id="clubWebDisplay" class="flex items-center gap-1 font-medium">
+              🌐 <span id="clubWebText">--</span>
+            </span>
+            <span id="clubStadiumDisplay" class="flex items-center gap-1 font-medium">
+              🏟️ <span id="clubStadiumText">--</span>
+            </span>
+          </div>
         </div>
-        <h2 id="currentClubTitle" class="text-2xl font-bold mt-1 tracking-tight">Cargando club...</h2>
-        <p id="clubModeDescription" class="text-xs text-slate-400 mt-0.5">Sincronizado con Supabase Cloud</p>
-      </div>
 
-      <div class="no-print flex items-center gap-2.5">
-        <button onclick="generarInformeEjecutivoPDF()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold px-3.5 py-2 rounded-xl text-xs sm:text-sm transition flex items-center gap-1.5">
-          <span>🖨️</span> Exportar Balance
-        </button>
-        <button onclick="abrirModalNuevoJugador()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs sm:text-sm transition flex items-center gap-1.5 shadow-lg shadow-emerald-500/10">
-          <span>+</span> Inscribir Jugador
-        </button>
-      </div>
-    </div>
-
-    <!-- TARJETAS KPIS -->
-    <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 print-kpis">
-      <div class="card-box p-4 rounded-xl border">
-        <p id="kpi1Title" class="text-xs text-slate-400 uppercase font-semibold">Recaudación Cuotas</p>
-        <p id="kpi1Value" class="text-2xl font-bold mt-1">0 €</p>
-        <span id="kpi1Sub" class="text-[11px] text-slate-400">0% cubierto</span>
-      </div>
-      <div class="card-box p-4 rounded-xl border">
-        <p class="text-xs text-slate-400 uppercase font-semibold">Minutos Totales Disputados</p>
-        <p id="kpi2Value" class="text-2xl font-bold mt-1 text-sky-400">0 min</p>
-        <span id="kpi2Sub" class="text-[11px] text-slate-400">0 min de media</span>
-      </div>
-      <div class="card-box p-4 rounded-xl border">
-        <p class="text-xs text-slate-400 uppercase font-semibold">Goles / Asistencias</p>
-        <p id="kpi3Value" class="text-2xl font-bold mt-1 text-emerald-400">0 / 0</p>
-        <span id="kpi3Sub" class="text-[11px] text-slate-400">Acciones ofensivas</span>
-      </div>
-      <div class="card-box p-4 rounded-xl border">
-        <p class="text-xs text-slate-400 uppercase font-semibold">Juego Limpio / Fair Play</p>
-        <p id="kpi4Value" class="text-2xl font-bold mt-1 text-amber-400">0 🟨 | 0 🟥</p>
-        <span id="kpi4Sub" class="text-[11px] text-slate-400">Tarjetas de equipo</span>
+        <!-- Botones de Acción sobre el Club -->
+        <div class="no-print flex flex-wrap items-center gap-2 w-full sm:w-auto pt-2 lg:pt-0">
+          <button onclick="abrirModalEditarClub()" class="flex-1 sm:flex-initial text-xs bg-slate-800 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 light:bg-slate-100 light:hover:bg-slate-200 border border-slate-700 dark:border-slate-700 light:border-slate-300 px-3.5 py-2.5 rounded-xl font-bold transition flex items-center justify-center gap-1.5">
+            <span>✏️</span> Editar Club
+          </button>
+          <button onclick="abrirModalNuevoJugador()" class="flex-1 sm:flex-initial text-xs bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold px-4 py-2.5 rounded-xl transition shadow-lg shadow-emerald-500/10 flex items-center justify-center gap-1.5">
+            <span>+</span> Inscribir Jugador
+          </button>
+        </div>
       </div>
     </section>
 
-    <!-- FORMULARIO DE PARTIDO & SEMÁFORO ADAPTATIVO (EL FORMULARIO SE OCULTA AL IMPRIMIR) -->
+    <!-- TARJETAS KPIS RESUMEN -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 print-kpis">
+      <div class="card-surface p-4 rounded-2xl border">
+        <p id="kpi1Title" class="text-[11px] text-muted-custom uppercase font-bold tracking-wider">Recaudación Cuotas</p>
+        <p id="kpi1Value" class="text-xl sm:text-2xl font-black mt-1">0 €</p>
+        <span id="kpi1Sub" class="text-[11px] text-muted-custom block font-medium">0% cubierto</span>
+      </div>
+      <div class="card-surface p-4 rounded-2xl border">
+        <p class="text-[11px] text-muted-custom uppercase font-bold tracking-wider">Minutos Totales Disputados</p>
+        <p id="kpi2Value" class="text-xl sm:text-2xl font-black mt-1 text-sky-400">0 min</p>
+        <span id="kpi2Sub" class="text-[11px] text-muted-custom block font-medium">0 min de media</span>
+      </div>
+      <div class="card-surface p-4 rounded-2xl border">
+        <p class="text-[11px] text-muted-custom uppercase font-bold tracking-wider">Goles / Asistencias</p>
+        <p id="kpi3Value" class="text-xl sm:text-2xl font-black mt-1 text-emerald-400">0 / 0</p>
+        <span id="kpi3Sub" class="text-[11px] text-muted-custom block font-medium">Acciones ofensivas</span>
+      </div>
+      <div class="card-surface p-4 rounded-2xl border">
+        <p class="text-[11px] text-muted-custom uppercase font-bold tracking-wider">Juego Limpio / Fair Play</p>
+        <p id="kpi4Value" class="text-xl sm:text-2xl font-black mt-1 text-amber-400">0 🟨 | 0 🟥</p>
+        <span id="kpi4Sub" class="text-[11px] text-muted-custom block font-medium">Tarjetas de equipo</span>
+      </div>
+    </section>
+
+    <!-- ======================================================== -->
+    <!-- MEJORA 2: REGISTRO DE ACTAS DE PARTIDO CON SELECCIÓN DE JORNADA -->
+    <!-- ======================================================== -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       
-      <!-- Volcado de acta a Supabase (no-print) -->
-      <section class="no-print card-box p-5 rounded-2xl border space-y-3 lg:col-span-1">
-        <h3 class="text-sm font-bold uppercase flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-sky-400"></span> Acta de Partido (Cloud)
-        </h3>
-        <p class="text-xs text-slate-400">Introduce estadísticas tras la jornada para actualizar la ficha de cada jugador.</p>
+      <!-- Volcado de acta con selección de Jornada -->
+      <section class="no-print card-surface p-5 rounded-3xl border space-y-3 lg:col-span-1">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xs sm:text-sm font-black uppercase tracking-wider flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span> Acta de Partido (Cloud)
+          </h3>
+          <span class="text-[10px] text-muted-custom font-semibold">Registro por Jornada</span>
+        </div>
+        <p class="text-xs text-muted-custom">Introduce o actualiza estadísticas seleccionando la jornada específica del encuentro.</p>
 
-        <form onsubmit="guardarActaPartidoEnSupabase(event)" class="space-y-3 pt-2">
+        <form onsubmit="guardarActaPartidoEnSupabase(event)" class="space-y-3 pt-1">
+          <!-- Selección de Jugador -->
           <div>
-            <label class="text-xs text-slate-400 block mb-1">Seleccionar Jugador</label>
-            <select id="matchSelectPlayer" required class="input-field w-full rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none">
+            <label class="text-[11px] text-muted-custom block mb-1 font-semibold">Jugador</label>
+            <select id="matchSelectPlayer" required class="input-surface w-full rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none">
               <option value="">-- Selecciona jugador --</option>
             </select>
           </div>
 
+          <!-- Selección de Jornada y Fecha -->
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="text-xs text-slate-400 block mb-1">Minutos Jugados</label>
-              <input id="matchMins" type="number" min="0" max="120" placeholder="45" required class="input-field w-full rounded px-2.5 py-1.5 text-xs">
+              <label class="text-[11px] text-muted-custom block mb-1 font-semibold">Jornada</label>
+              <select id="matchJourneySelect" required class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none">
+                <!-- Se llena dinámicamente con Jornada 1 a 38 -->
+              </select>
             </div>
             <div>
-              <label class="text-xs text-slate-400 block mb-1">Goles</label>
-              <input id="matchGoals" type="number" min="0" value="0" class="input-field w-full rounded px-2.5 py-1.5 text-xs">
+              <label class="text-[11px] text-muted-custom block mb-1 font-semibold">Fecha Partido</label>
+              <input id="matchDateInput" type="date" required class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs">
             </div>
           </div>
 
+          <!-- Minutos y Goles -->
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[11px] text-muted-custom block mb-1 font-semibold">Minutos Jugados</label>
+              <input id="matchMins" type="number" min="0" max="120" placeholder="45" required class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs font-semibold">
+            </div>
+            <div>
+              <label class="text-[11px] text-muted-custom block mb-1 font-semibold">Goles</label>
+              <input id="matchGoals" type="number" min="0" value="0" class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs font-semibold">
+            </div>
+          </div>
+
+          <!-- Asistencias, Amarillas y Rojas -->
           <div class="grid grid-cols-3 gap-2">
             <div>
-              <label class="text-xs text-slate-400 block mb-1">Asistencias</label>
-              <input id="matchAssists" type="number" min="0" value="0" class="input-field w-full rounded px-2.5 py-1.5 text-xs">
+              <label class="text-[11px] text-muted-custom block mb-1 font-semibold">Asistencias</label>
+              <input id="matchAssists" type="number" min="0" value="0" class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs">
             </div>
             <div>
-              <label class="text-xs text-slate-400 block mb-1">Amarillas 🟨</label>
-              <input id="matchYellows" type="number" min="0" max="2" value="0" class="input-field w-full rounded px-2.5 py-1.5 text-xs">
+              <label class="text-[11px] text-muted-custom block mb-1 font-semibold">Amarillas 🟨</label>
+              <input id="matchYellows" type="number" min="0" max="2" value="0" class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs">
             </div>
             <div>
-              <label class="text-xs text-slate-400 block mb-1">Rojas 🟥</label>
-              <input id="matchReds" type="number" min="0" max="1" value="0" class="input-field w-full rounded px-2.5 py-1.5 text-xs">
+              <label class="text-[11px] text-muted-custom block mb-1 font-semibold">Rojas 🟥</label>
+              <input id="matchReds" type="number" min="0" max="1" value="0" class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs">
             </div>
           </div>
 
-          <button id="btnSaveMatch" type="submit" class="w-full bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold rounded-lg py-2 text-xs sm:text-sm transition mt-1">
-            + Guardar en la Nube
+          <button id="btnSaveMatch" type="submit" class="w-full bg-sky-500 hover:bg-sky-600 text-slate-950 font-black rounded-xl py-2.5 text-xs transition shadow-sm mt-1">
+            + Guardar Acta Jornada
           </button>
         </form>
       </section>
 
-      <!-- Diagnóstico Adaptativo / Auditoría Ejecutiva -->
-      <section class="card-box p-5 rounded-2xl border lg:col-span-2 flex flex-col justify-between">
+      <!-- Diagnóstico Adaptativo / Auditoría de Plantilla -->
+      <section class="card-surface p-5 rounded-3xl border lg:col-span-2 flex flex-col justify-between">
         <div>
           <div class="flex items-center justify-between mb-3">
-            <h3 id="diagnosisHeader" class="text-sm font-bold uppercase flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-amber-400"></span> Diagnóstico Adaptativo
+            <h3 id="diagnosisHeader" class="text-xs sm:text-sm font-black uppercase tracking-wider flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Diagnóstico Adaptativo
             </h3>
-            <span id="syncIndicator" class="text-[10px] bg-emerald-950/80 text-emerald-400 px-2.5 py-1 rounded-full border border-emerald-800 font-semibold no-print">● Conectado a Supabase</span>
+            <span id="syncIndicator" class="text-[10px] bg-emerald-950/80 text-emerald-400 px-2.5 py-1 rounded-full border border-emerald-800 font-bold no-print">● Conectado a Supabase</span>
           </div>
 
-          <p id="diagnosisDescription" class="text-xs text-slate-400 leading-relaxed">
+          <p id="diagnosisDescription" class="text-xs text-muted-custom leading-relaxed">
             Midiendo indicadores deportivos y financieros en tiempo real desde la nube.
           </p>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-            <div class="inner-box p-3.5 rounded-xl border">
-              <span id="metricDiagTitle1" class="text-xs text-slate-400 block">Minutos promedio esperados</span>
-              <span id="metricDiagVal1" class="text-lg font-bold mt-0.5 block">0 min</span>
+            <div class="inner-surface p-4 rounded-2xl border">
+              <span id="metricDiagTitle1" class="text-[11px] text-muted-custom uppercase font-semibold block">Minutos promedio esperados</span>
+              <span id="metricDiagVal1" class="text-lg font-black mt-0.5 block">0 min</span>
             </div>
-            <div class="inner-box p-3.5 rounded-xl border">
-              <span id="metricDiagTitle2" class="text-xs text-slate-400 block">Semáforo de situación</span>
-              <span id="metricDiagVal2" class="text-sm font-semibold text-emerald-400 mt-0.5 block">Datos al día</span>
+            <div class="inner-surface p-4 rounded-2xl border">
+              <span id="metricDiagTitle2" class="text-[11px] text-muted-custom uppercase font-semibold block">Semáforo de situación</span>
+              <span id="metricDiagVal2" class="text-sm font-bold text-emerald-400 mt-0.5 block">Datos al día</span>
             </div>
           </div>
         </div>
 
-        <div class="no-print mt-4 pt-3 border-t border-slate-800/80 text-[11px] text-slate-500 flex justify-between">
-          <span>💡 Filtra jugadores abajo o haz clic en su nombre para ver su <strong>Ficha Técnica</strong>.</span>
-          <button onclick="cargarTodoDesdeSupabase()" class="text-sky-400 hover:text-sky-300 font-medium">🔄 Sincronizar</button>
+        <div class="no-print mt-4 pt-3 border-t border-slate-700/60 dark:border-slate-800 text-[11px] text-muted-custom flex justify-between items-center">
+          <span>💡 Pulsa en cualquier jugador de la tabla para <strong>ver o editar su ficha completa</strong>.</span>
+          <button onclick="cargarTodoDesdeSupabase()" class="text-sky-500 hover:text-sky-400 font-bold">🔄 Sincronizar</button>
         </div>
       </section>
 
     </div>
 
-    <!-- SECCIÓN: TABLA DE JUGADORES + BARRA DE FILTROS Y BÚSQUEDA -->
-    <section class="card-box rounded-2xl border overflow-hidden shadow-xl">
+    <!-- ======================================================== -->
+    <!-- TABLA DE PLANTILLA CON FILTROS, BÚSQUEDA Y ACCESO A EDICIÓN -->
+    <!-- ======================================================== -->
+    <section class="card-surface rounded-3xl border overflow-hidden shadow-xl">
       
       <!-- Cabecera de la Sección -->
-      <div class="p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 table-header-border">
+      <div class="p-4 sm:p-5 border-b border-slate-700/60 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
         <div>
-          <h3 class="font-bold text-base">Plantilla Oficial & Rendimiento</h3>
-          <p class="text-xs text-slate-400">Gestión ágil para plantillas extensas con búsqueda en tiempo real</p>
+          <h3 class="font-black text-base sm:text-lg tracking-tight">Plantilla Oficial & Rendimiento</h3>
+          <p class="text-xs text-muted-custom">Listado completo interactivo. Pulsa sobre un jugador para ver métricas o editar sus datos.</p>
         </div>
-        <div class="flex items-center gap-2">
-          <span id="playerFilteredBadge" class="text-xs bg-slate-800 dark:bg-slate-800 light:bg-slate-200 px-3 py-1 rounded-full text-slate-300 border border-slate-700">
-            0 jugadores
-          </span>
-        </div>
+        <span id="playerFilteredBadge" class="text-xs badge-theme-tag px-3 py-1 rounded-full text-muted-custom font-bold border border-slate-700">
+          0 jugadores
+        </span>
       </div>
 
-      <!-- BARRA DE FILTROS Y BÚSQUEDA (NO-PRINT PARA LA GENERACIÓN DE PDF) -->
-      <div class="no-print p-4 border-b border-slate-800/60 bg-slate-900/40 dark:bg-slate-900/40 light:bg-slate-50 flex flex-col md:flex-row items-stretch md:items-center gap-3">
+      <!-- Barra de Filtros y Búsqueda -->
+      <div class="no-print p-3 sm:p-4 border-b border-slate-700/60 dark:border-slate-800 inner-surface flex flex-col md:flex-row items-stretch md:items-center gap-2.5">
         
-        <!-- Buscador por Nombre o Dorsal -->
+        <!-- Buscador -->
         <div class="relative flex-1">
-          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 text-xs">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-custom text-xs">
             🔍
           </span>
-          <input id="searchInput" type="text" oninput="aplicarFiltrosYBusqueda()" placeholder="Buscar jugador por nombre o dorsal..." class="input-field w-full pl-8 pr-3 py-2 text-xs rounded-xl focus:outline-none">
+          <input id="searchInput" type="text" oninput="aplicarFiltrosYBusqueda()" placeholder="Buscar jugador por nombre o dorsal..." class="input-surface w-full pl-8 pr-3 py-2 text-xs rounded-xl focus:outline-none font-medium">
         </div>
 
-        <!-- Filtro por Demarcación / Posición -->
+        <!-- Filtro Posición -->
         <div class="w-full md:w-44">
-          <select id="filterPosition" onchange="aplicarFiltrosYBusqueda()" class="input-field w-full px-3 py-2 text-xs rounded-xl focus:outline-none">
+          <select id="filterPosition" onchange="aplicarFiltrosYBusqueda()" class="input-surface w-full px-3 py-2 text-xs rounded-xl focus:outline-none font-medium">
             <option value="ALL">Todas las posiciones</option>
             <option value="Portero">Porteros</option>
             <option value="Defensa">Defensas</option>
@@ -257,27 +415,25 @@
           </select>
         </div>
 
-        <!-- Filtro Contextual por Estado (Cuota en Base / Rendimiento en Pro) -->
+        <!-- Filtro Estado Cuota / Contrato -->
         <div class="w-full md:w-52">
-          <select id="filterStatus" onchange="aplicarFiltrosYBusqueda()" class="input-field w-full px-3 py-2 text-xs rounded-xl focus:outline-none">
+          <select id="filterStatus" onchange="aplicarFiltrosYBusqueda()" class="input-surface w-full px-3 py-2 text-xs rounded-xl focus:outline-none font-medium">
             <option value="ALL">Todos los estados</option>
-            <!-- Opciones dinámicas según tipo de club -->
           </select>
         </div>
 
-        <!-- Botón Restablecer Filtros -->
-        <button onclick="limpiarFiltros()" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 px-3 py-2 rounded-xl transition font-medium whitespace-nowrap">
+        <button onclick="limpiarFiltros()" class="text-xs bg-slate-800 hover:bg-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 light:bg-slate-200 light:hover:bg-slate-300 border border-slate-700 px-3 py-2 rounded-xl transition font-bold whitespace-nowrap">
           Limpiar
         </button>
       </div>
 
-      <!-- Tabla de Jugadores Filtrada -->
+      <!-- Tabla Responsive -->
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs sm:text-sm">
-          <thead class="table-thead uppercase text-[11px]">
+          <thead class="table-thead-custom uppercase text-[11px] font-extrabold tracking-wider">
             <tr>
               <th class="p-3">#</th>
-              <th class="p-3">Jugador (Ficha Detalle)</th>
+              <th class="p-3">Jugador (Ficha / Edición)</th>
               <th class="p-3">Posición</th>
               <th id="thEconomy" class="p-3 text-right">Cuota Anual</th>
               <th class="p-3 text-right">Partidos</th>
@@ -289,13 +445,13 @@
               <th class="p-3 text-center no-print">Acción</th>
             </tr>
           </thead>
-          <tbody id="rosterTableBody" class="divide-y divide-slate-800 table-divide">
-            <!-- Rellenado dinámicamente -->
+          <tbody id="rosterTableBody" class="divide-y divide-slate-800 table-divide-custom">
+            <!-- Rellenado con JavaScript -->
           </tbody>
         </table>
       </div>
 
-      <!-- Pie de página formal exclusivo para el PDF impreso -->
+      <!-- Pie de página para impresión PDF -->
       <div class="print-only p-4 border-t border-slate-300 text-xs text-slate-600 flex justify-between mt-4">
         <span>SportPlatform • Balance Oficial de Temporada</span>
         <span>Página 1 de 1</span>
@@ -305,27 +461,114 @@
   </main>
 
   <!-- ======================================================== -->
-  <!-- MODAL: FICHA INDIVIDUAL DEL JUGADOR (VISTA DE DETALLE) -->
+  <!-- MODAL MEJORA 1: EDITAR DATOS COMPLETOS DEL CLUB -->
+  <!-- ======================================================== -->
+  <div id="editClubModal" class="no-print hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="card-surface rounded-3xl max-w-2xl w-full border my-auto p-5 sm:p-7 shadow-2xl relative space-y-5 max-h-[92vh] overflow-y-auto">
+      <button onclick="cerrarModal('editClubModal')" class="absolute top-5 right-5 text-muted-custom hover:text-white text-sm">✕</button>
+
+      <div class="border-b border-slate-700/60 dark:border-slate-800 pb-3">
+        <h2 class="text-xl font-black tracking-tight">Editar Datos de la Entidad</h2>
+        <p class="text-xs text-muted-custom">Actualiza información corporativa, de contacto y ubicación de Google Maps.</p>
+      </div>
+
+      <form onsubmit="actualizarClubEnSupabase(event)" class="space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="text-[11px] text-muted-custom block mb-1 font-bold">Nombre Oficial del Club</label>
+            <input id="editClubName" type="text" required class="input-surface w-full rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold focus:outline-none">
+          </div>
+          <div>
+            <label class="text-[11px] text-muted-custom block mb-1 font-bold">Estadio / Ciudad Deportiva</label>
+            <input id="editClubStadium" type="text" placeholder="Ej. Campo Municipal San Pedro" class="input-surface w-full rounded-xl px-3 py-2 text-xs sm:text-sm focus:outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="text-[11px] text-muted-custom block mb-1 font-bold">Estructura</label>
+            <select id="editClubStructure" onchange="adaptarCategoriasEnEdicion()" class="input-surface w-full rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none">
+              <option value="grassroots">Fútbol Base</option>
+              <option value="pro">Profesional</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] text-muted-custom block mb-1 font-bold">Categoría</label>
+            <select id="editClubCategory" class="input-surface w-full rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none"></select>
+          </div>
+          <div>
+            <label class="text-[11px] text-muted-custom block mb-1 font-bold">Año Fundación</label>
+            <input id="editClubFounded" type="number" placeholder="Ej. 1984" class="input-surface w-full rounded-xl px-3 py-2 text-xs focus:outline-none">
+          </div>
+        </div>
+
+        <!-- Dirección física con enlace a Google Maps -->
+        <div>
+          <label class="text-[11px] text-muted-custom block mb-1 font-bold">Dirección Completa (Sede / Instalaciones)</label>
+          <div class="flex gap-2">
+            <input id="editClubAddress" type="text" placeholder="Ej. Calle del Deporte 12, 28001 Madrid" class="input-surface flex-1 rounded-xl px-3 py-2 text-xs focus:outline-none">
+            <button type="button" onclick="probarEnlaceGoogleMaps()" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-2 rounded-xl transition font-semibold" title="Ver cómo se abre en Maps">
+              🗺️ Maps
+            </button>
+          </div>
+          <span class="text-[10px] text-muted-custom mt-1 block">La dirección generará automáticamente un enlace directo a Google Maps para familias y rivales.</span>
+        </div>
+
+        <!-- Canales de Contacto: Teléfono, Email y Web Oficial -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="text-[11px] text-muted-custom block mb-1 font-bold">Teléfono de Contacto</label>
+            <input id="editClubPhone" type="tel" placeholder="+34 600 000 000" class="input-surface w-full rounded-xl px-3 py-2 text-xs focus:outline-none">
+          </div>
+          <div>
+            <label class="text-[11px] text-muted-custom block mb-1 font-bold">Correo Electrónico</label>
+            <input id="editClubEmail" type="email" placeholder="contacto@miclub.com" class="input-surface w-full rounded-xl px-3 py-2 text-xs focus:outline-none">
+          </div>
+          <div>
+            <label class="text-[11px] text-muted-custom block mb-1 font-bold">Página Web Oficial</label>
+            <input id="editClubWebsite" type="url" placeholder="https://www.miclub.com" class="input-surface w-full rounded-xl px-3 py-2 text-xs focus:outline-none">
+          </div>
+        </div>
+
+        <!-- Presupuesto / Límite Salarial -->
+        <div>
+          <label id="editBudgetLabel" class="text-[11px] text-muted-custom block mb-1 font-bold">Presupuesto Temporada (€)</label>
+          <input id="editClubBudget" type="number" required class="input-surface w-full rounded-xl px-3 py-2 text-xs sm:text-sm text-emerald-400 font-extrabold focus:outline-none">
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button type="button" onclick="cerrarModal('editClubModal')" class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold rounded-xl py-2.5 text-xs transition">
+            Cancelar
+          </button>
+          <button id="btnUpdateClub" type="submit" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black rounded-xl py-2.5 text-xs transition shadow-md shadow-emerald-500/10">
+            Guardar Cambios en Club
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL MEJORA 2: FICHA DE JUGADOR CON PESTAÑAS (MÉTRICAS + EDICIÓN DIRECTA) -->
   <!-- ======================================================== -->
   <div id="playerDetailModal" class="no-print hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
-    <div class="card-box rounded-3xl max-w-4xl w-full border my-auto p-5 sm:p-7 shadow-2xl relative space-y-6 max-h-[92vh] overflow-y-auto">
+    <div class="card-surface rounded-3xl max-w-4xl w-full border my-auto p-4 sm:p-7 shadow-2xl relative space-y-5 max-h-[92vh] overflow-y-auto">
       
-      <!-- Botón Cerrar -->
       <button onclick="cerrarFichaDetalle()" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition text-sm">✕</button>
 
       <!-- Cabecera de la Ficha del Jugador -->
-      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
-        <div class="flex items-center gap-4">
-          <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-600 to-sky-500 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-emerald-500/20">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-700/60 dark:border-slate-800 pb-4">
+        <div class="flex items-center gap-3.5">
+          <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-slate-950 text-xl sm:text-2xl font-black shadow-lg shadow-emerald-500/20">
             <span id="detailPlayerDorsal">#10</span>
           </div>
           <div>
             <div class="flex items-center gap-2">
-              <h2 id="detailPlayerName" class="text-2xl font-black tracking-tight">Nombre del Jugador</h2>
-              <span id="detailPlayerPosition" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300">Delantero</span>
+              <h2 id="detailPlayerName" class="text-xl sm:text-2xl font-black tracking-tight">Nombre del Jugador</h2>
+              <span id="detailPlayerPosition" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full badge-theme-tag border border-slate-700">Delantero</span>
             </div>
-            <p class="text-xs text-slate-400 mt-1 flex items-center gap-2">
-              <span>Club: <strong id="detailClubName" class="text-emerald-400 font-semibold">Cantera</strong></span>
+            <p class="text-xs text-muted-custom mt-1 flex flex-wrap items-center gap-2">
+              <span>Club: <strong id="detailClubName" class="text-emerald-500 dark:text-emerald-400 font-semibold">Cantera</strong></span>
               <span>•</span>
               <span id="detailPlayerEco">Cuota: 380 €</span>
               <span>•</span>
@@ -334,101 +577,128 @@
           </div>
         </div>
 
-        <!-- Rating General / Score Formativo -->
-        <div class="bg-slate-950/60 dark:bg-slate-950/60 light:bg-slate-100 p-3 rounded-2xl border border-slate-800/80 flex items-center gap-3">
-          <div class="text-right">
-            <span class="text-[10px] text-slate-400 uppercase font-bold block">Índice Rendimiento</span>
-            <span id="detailScoreValue" class="text-xl font-black text-emerald-400">8.6 / 10</span>
-          </div>
-          <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-lg font-black">
-            ⚡
-          </div>
+        <!-- Selector de Pestañas: Ver Métricas vs Editar Ficha -->
+        <div class="flex p-1 inner-surface rounded-2xl border border-slate-700 text-xs font-bold w-full sm:w-auto">
+          <button id="tabPlayerViewBtn" onclick="cambiarPestanaModalJugador('view')" class="flex-1 sm:flex-initial px-4 py-1.5 rounded-xl bg-emerald-500 text-slate-950 transition">
+            📊 Ficha & Gráficos
+          </button>
+          <button id="tabPlayerEditBtn" onclick="cambiarPestanaModalJugador('edit')" class="flex-1 sm:flex-initial px-4 py-1.5 rounded-xl text-muted-custom hover:text-white transition">
+            ✏️ Editar Datos
+          </button>
         </div>
       </div>
 
-      <!-- Tarjetas Métricas Rápidas del Jugador -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div class="inner-box p-3 rounded-xl border text-center">
-          <span class="text-[10px] text-slate-400 uppercase font-semibold">Minutos Totales</span>
-          <p id="detailMinutes" class="text-lg font-bold text-sky-400 mt-0.5">0'</p>
-          <span id="detailMinutesAvg" class="text-[10px] text-slate-500">0' por partido</span>
-        </div>
-        <div class="inner-box p-3 rounded-xl border text-center">
-          <span class="text-[10px] text-slate-400 uppercase font-semibold">Goles Marcados</span>
-          <p id="detailGoals" class="text-lg font-bold text-emerald-400 mt-0.5">0</p>
-          <span id="detailGoalsFreq" class="text-[10px] text-slate-500">cada 0 mins</span>
-        </div>
-        <div class="inner-box p-3 rounded-xl border text-center">
-          <span class="text-[10px] text-slate-400 uppercase font-semibold">Asistencias</span>
-          <p id="detailAssists" class="text-lg font-bold text-indigo-400 mt-0.5">0</p>
-          <span id="detailGoalContribution" class="text-[10px] text-slate-500">0% aportación</span>
-        </div>
-        <div class="inner-box p-3 rounded-xl border text-center">
-          <span class="text-[10px] text-slate-400 uppercase font-semibold">Disciplina</span>
-          <p id="detailCards" class="text-lg font-bold text-amber-400 mt-0.5">0🟨 0🟥</p>
-          <span class="text-[10px] text-slate-500">Juego Limpio</span>
-        </div>
-      </div>
-
-      <!-- SECCIÓN DE GRÁFICOS INTERACTIVOS (CHART.JS) -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <div class="inner-box p-4 rounded-2xl border space-y-2">
-          <div class="flex items-center justify-between">
-            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300">📈 Evolución de Minutos (Partidos)</h4>
-            <span class="text-[10px] text-slate-400">Últimas actas</span>
+      <!-- VISTA 1: MÉTRICAS, RADAR Y GRÁFICO (CHART.JS) -->
+      <div id="playerViewTabContent" class="space-y-5">
+        
+        <!-- Tarjetas Métricas Rápidas -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+          <div class="inner-surface p-3 rounded-2xl border text-center">
+            <span class="text-[10px] text-muted-custom uppercase font-bold">Minutos Totales</span>
+            <p id="detailMinutes" class="text-lg font-black text-sky-400 mt-0.5">0'</p>
+            <span id="detailMinutesAvg" class="text-[10px] text-muted-custom">0' por partido</span>
           </div>
-          <div class="h-52 relative">
-            <canvas id="chartMinutesEvolution"></canvas>
+          <div class="inner-surface p-3 rounded-2xl border text-center">
+            <span class="text-[10px] text-muted-custom uppercase font-bold">Goles</span>
+            <p id="detailGoals" class="text-lg font-black text-emerald-400 mt-0.5">0</p>
+            <span id="detailGoalsFreq" class="text-[10px] text-muted-custom">cada 0 mins</span>
+          </div>
+          <div class="inner-surface p-3 rounded-2xl border text-center">
+            <span class="text-[10px] text-muted-custom uppercase font-bold">Asistencias</span>
+            <p id="detailAssists" class="text-lg font-black text-teal-400 mt-0.5">0</p>
+            <span id="detailGoalContribution" class="text-[10px] text-muted-custom">0 aportaciones</span>
+          </div>
+          <div class="inner-surface p-3 rounded-2xl border text-center">
+            <span class="text-[10px] text-muted-custom uppercase font-bold">Disciplina</span>
+            <p id="detailCards" class="text-lg font-black text-amber-400 mt-0.5">0🟨 0🟥</p>
+            <span class="text-[10px] text-muted-custom">Juego Limpio</span>
           </div>
         </div>
 
-        <div class="inner-box p-4 rounded-2xl border space-y-2">
-          <div class="flex items-center justify-between">
-            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300">🕸️ Perfil Técnico & Atributos</h4>
-            <span class="text-[10px] text-slate-400">Escala 1 - 100</span>
+        <!-- Gráficos Interactivos -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="inner-surface p-4 rounded-3xl border space-y-2">
+            <h4 class="text-xs font-black uppercase tracking-wider text-muted-custom">📈 Evolución de Minutos por Partido</h4>
+            <div class="h-48 relative">
+              <canvas id="chartMinutesEvolution"></canvas>
+            </div>
           </div>
-          <div class="h-52 relative flex items-center justify-center">
-            <canvas id="chartRadarSkills"></canvas>
+          <div class="inner-surface p-4 rounded-3xl border space-y-2">
+            <h4 class="text-xs font-black uppercase tracking-wider text-muted-custom">🕸️ Perfil Técnico según Posición</h4>
+            <div class="h-48 relative flex items-center justify-center">
+              <canvas id="chartRadarSkills"></canvas>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- HISTORIAL DE ACTAS DEL JUGADOR & NOTAS DEL SCOUT/ENTRENADOR -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div class="lg:col-span-2 inner-box rounded-2xl border overflow-hidden p-3.5 space-y-2">
-          <h4 class="text-xs font-bold uppercase text-slate-300">Historial Detallado de Jornadas</h4>
-          <div class="overflow-x-auto max-h-40 overflow-y-auto">
+        <!-- Historial de Jornadas con opción de borrar acta individual -->
+        <div class="inner-surface rounded-3xl border overflow-hidden p-4 space-y-2">
+          <div class="flex justify-between items-center">
+            <h4 class="text-xs font-black uppercase text-muted-custom tracking-wider">Historial de Partidos Registrados</h4>
+            <span class="text-[10px] text-muted-custom font-semibold">Desglose por Jornada</span>
+          </div>
+          <div class="overflow-x-auto max-h-44 overflow-y-auto">
             <table class="w-full text-left text-xs">
-              <thead class="text-[10px] uppercase text-slate-400 border-b border-slate-800">
+              <thead class="text-[10px] uppercase text-muted-custom border-b border-slate-700/60 font-bold">
                 <tr>
-                  <th class="py-1.5 px-2">Fecha / Jornada</th>
-                  <th class="py-1.5 px-2 text-right">Minutos</th>
-                  <th class="py-1.5 px-2 text-right">Goles</th>
-                  <th class="py-1.5 px-2 text-right">Asist.</th>
-                  <th class="py-1.5 px-2 text-center">Tarjetas</th>
+                  <th class="py-2 px-2.5">Jornada / Fecha</th>
+                  <th class="py-2 px-2.5 text-right">Minutos</th>
+                  <th class="py-2 px-2.5 text-right">Goles</th>
+                  <th class="py-2 px-2.5 text-right">Asist.</th>
+                  <th class="py-2 px-2.5 text-center">Tarjetas</th>
+                  <th class="py-2 px-2.5 text-center">Acción</th>
                 </tr>
               </thead>
-              <tbody id="detailMatchHistoryBody" class="divide-y divide-slate-800/60">
-                <!-- Se llena dinámicamente -->
-              </tbody>
+              <tbody id="detailMatchHistoryBody" class="divide-y divide-slate-800/60"></tbody>
             </table>
           </div>
         </div>
 
-        <div class="inner-box rounded-2xl border p-4 space-y-3 flex flex-col justify-between">
-          <div>
-            <h4 class="text-xs font-bold uppercase text-slate-300 flex items-center gap-1.5">
-              <span>📝</span> Informe de Evaluación
-            </h4>
-            <p id="detailScoutNotes" class="text-xs text-slate-400 mt-2 leading-relaxed">
-              Cargando valoración táctica del jugador...
-            </p>
+      </div>
+
+      <!-- VISTA 2: FORMULARIO DE EDICIÓN DEL JUGADOR -->
+      <div id="playerEditTabContent" class="hidden space-y-4 pt-1">
+        <form onsubmit="actualizarJugadorEnSupabase(event)" class="space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="text-[11px] text-muted-custom block mb-1 font-bold">Nombre Completo</label>
+              <input id="editPlayerName" type="text" required class="input-surface w-full rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold focus:outline-none">
+            </div>
+            <div>
+              <label class="text-[11px] text-muted-custom block mb-1 font-bold">Dorsal</label>
+              <input id="editPlayerDorsal" type="number" required class="input-surface w-full rounded-xl px-3 py-2 text-xs sm:text-sm font-bold focus:outline-none">
+            </div>
           </div>
 
-          <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-500">
-            Diagnóstico: <span id="detailDiagnosisTag" class="font-semibold text-emerald-400">Formativo Adecuado</span>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="text-[11px] text-muted-custom block mb-1 font-bold">Posición en el Campo</label>
+              <select id="editPlayerPos" class="input-surface w-full rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none">
+                <option>Portero</option>
+                <option>Defensa</option>
+                <option>Centrocampista</option>
+                <option>Delantero</option>
+              </select>
+            </div>
+            <div>
+              <label id="editPlayerFeeLabel" class="text-[11px] text-muted-custom block mb-1 font-bold">Cuota Anual (€)</label>
+              <input id="editPlayerFee" type="number" required class="input-surface w-full rounded-xl px-3 py-2 text-xs text-emerald-400 font-extrabold focus:outline-none">
+            </div>
+            <div>
+              <label id="editPlayerStatusLabel" class="text-[11px] text-muted-custom block mb-1 font-bold">Estado de Pago / Contrato</label>
+              <select id="editPlayerStatus" class="input-surface w-full rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none"></select>
+            </div>
           </div>
-        </div>
+
+          <div class="flex gap-2 pt-3">
+            <button type="button" onclick="cambiarPestanaModalJugador('view')" class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold rounded-xl py-2.5 text-xs transition">
+              Volver a Estadísticas
+            </button>
+            <button id="btnUpdatePlayer" type="submit" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black rounded-xl py-2.5 text-xs transition shadow-md shadow-emerald-500/10">
+              Guardar Cambios del Jugador
+            </button>
+          </div>
+        </form>
       </div>
 
     </div>
@@ -436,40 +706,40 @@
 
   <!-- MODAL DE REGISTRO: NUEVO CLUB -->
   <div id="clubModal" class="no-print hidden fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="card-box rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl relative border">
-      <button onclick="cerrarModal('clubModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-sm">✕</button>
+    <div class="card-surface rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative border">
+      <button onclick="cerrarModal('clubModal')" class="absolute top-4 right-4 text-muted-custom hover:text-white text-sm">✕</button>
 
       <div class="text-center space-y-1">
-        <h2 class="text-xl font-bold tracking-tight">Registrar Nuevo Club</h2>
-        <p class="text-xs text-slate-400">Se guardará de forma permanente en tu base de datos Supabase</p>
+        <h2 class="text-xl font-black tracking-tight">Registrar Nuevo Club</h2>
+        <p class="text-xs text-muted-custom">Se creará en tu base de datos Supabase</p>
       </div>
 
       <form onsubmit="guardarClubEnSupabase(event)" class="space-y-4">
         <div>
-          <label class="text-xs text-slate-400 block mb-1">Nombre de la Entidad o Escuela</label>
-          <input id="inputClubName" type="text" placeholder="Ej. UD San Pedro" required class="input-field w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+          <label class="text-[11px] text-muted-custom block mb-1 font-bold">Nombre del Club o Escuela</label>
+          <input id="inputClubName" type="text" placeholder="Ej. UD San Pedro" required class="input-surface w-full rounded-xl px-3 py-2 text-sm focus:outline-none">
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="text-xs text-slate-400 block mb-1">Estructura</label>
-            <select id="inputClubStructure" onchange="actualizarOpcionesCategorias()" class="input-field w-full rounded-lg px-3 py-2 text-sm focus:outline-none">
+            <label class="text-[11px] text-muted-custom block mb-1 font-bold">Estructura</label>
+            <select id="inputClubStructure" onchange="actualizarOpcionesCategorias()" class="input-surface w-full rounded-xl px-3 py-2 text-sm focus:outline-none">
               <option value="grassroots">Fútbol Base</option>
               <option value="pro">Profesional</option>
             </select>
           </div>
           <div>
-            <label class="text-xs text-slate-400 block mb-1">Categoría</label>
-            <select id="inputClubCategory" class="input-field w-full rounded-lg px-3 py-2 text-sm focus:outline-none"></select>
+            <label class="text-[11px] text-muted-custom block mb-1 font-bold">Categoría</label>
+            <select id="inputClubCategory" class="input-surface w-full rounded-xl px-3 py-2 text-sm focus:outline-none"></select>
           </div>
         </div>
 
         <div>
-          <label id="inputBudgetLabel" class="text-xs text-slate-400 block mb-1">Presupuesto Temporada (€)</label>
-          <input id="inputClubBudget" type="number" value="18000" required class="input-field w-full rounded-lg px-3 py-2 text-sm text-emerald-400 font-semibold focus:outline-none">
+          <label id="inputBudgetLabel" class="text-[11px] text-muted-custom block mb-1 font-bold">Presupuesto Temporada (€)</label>
+          <input id="inputClubBudget" type="number" value="18000" required class="input-surface w-full rounded-xl px-3 py-2 text-sm text-emerald-400 font-extrabold focus:outline-none">
         </div>
 
-        <button id="btnSaveClub" type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-lg py-2.5 text-sm transition">
+        <button id="btnSaveClub" type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black rounded-xl py-2.5 text-sm transition">
           Crear Club en Supabase
         </button>
       </form>
@@ -478,28 +748,28 @@
 
   <!-- MODAL DE REGISTRO: NUEVO JUGADOR -->
   <div id="playerModal" class="no-print hidden fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="card-box rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl relative border">
-      <button onclick="cerrarModal('playerModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-sm">✕</button>
+    <div class="card-surface rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl relative border">
+      <button onclick="cerrarModal('playerModal')" class="absolute top-4 right-4 text-muted-custom hover:text-white text-sm">✕</button>
 
       <div class="text-center space-y-1">
-        <h2 class="text-xl font-bold tracking-tight">Inscribir Jugador</h2>
-        <p id="playerModalSub" class="text-xs text-slate-400">Club activo: ...</p>
+        <h2 class="text-xl font-black tracking-tight">Inscribir Jugador</h2>
+        <p id="playerModalSub" class="text-xs text-muted-custom">Club activo: ...</p>
       </div>
 
       <form onsubmit="guardarJugadorEnSupabase(event)" class="space-y-4">
         <div>
-          <label class="text-xs text-slate-400 block mb-1">Nombre Completo</label>
-          <input id="inputPlayerName" type="text" placeholder="Ej. Carlos Navarro" required class="input-field w-full rounded-lg px-3 py-2 text-sm focus:outline-none">
+          <label class="text-[11px] text-muted-custom block mb-1 font-bold">Nombre Completo</label>
+          <input id="inputPlayerName" type="text" placeholder="Ej. Carlos Navarro" required class="input-surface w-full rounded-xl px-3 py-2 text-sm focus:outline-none">
         </div>
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="text-xs text-slate-400 block mb-1">Dorsal</label>
-            <input id="inputPlayerDorsal" type="number" placeholder="10" required class="input-field w-full rounded-lg px-3 py-2 text-sm focus:outline-none">
+            <label class="text-[11px] text-muted-custom block mb-1 font-bold">Dorsal</label>
+            <input id="inputPlayerDorsal" type="number" placeholder="10" required class="input-surface w-full rounded-xl px-3 py-2 text-sm focus:outline-none">
           </div>
           <div>
-            <label class="text-xs text-slate-400 block mb-1">Posición</label>
-            <select id="inputPlayerPos" class="input-field w-full rounded-lg px-3 py-2 text-sm focus:outline-none">
+            <label class="text-[11px] text-muted-custom block mb-1 font-bold">Posición</label>
+            <select id="inputPlayerPos" class="input-surface w-full rounded-xl px-3 py-2 text-sm focus:outline-none">
               <option>Portero</option>
               <option>Defensa</option>
               <option>Centrocampista</option>
@@ -510,12 +780,12 @@
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label id="inputPlayerFeeLabel" class="text-xs text-slate-400 block mb-1">Cuota Anual (€)</label>
-            <input id="inputPlayerFee" type="number" value="380" required class="input-field w-full rounded-lg px-3 py-2 text-sm text-emerald-400 font-semibold focus:outline-none">
+            <label id="inputPlayerFeeLabel" class="text-[11px] text-muted-custom block mb-1 font-bold">Cuota Anual (€)</label>
+            <input id="inputPlayerFee" type="number" value="380" required class="input-surface w-full rounded-xl px-3 py-2 text-sm text-emerald-400 font-extrabold focus:outline-none">
           </div>
           <div>
-            <label id="inputPlayerStatusLabel" class="text-xs text-slate-400 block mb-1">Estado de Pago</label>
-            <select id="inputPlayerStatus" class="input-field w-full rounded-lg px-3 py-2 text-sm focus:outline-none">
+            <label id="inputPlayerStatusLabel" class="text-[11px] text-muted-custom block mb-1 font-bold">Estado de Pago</label>
+            <select id="inputPlayerStatus" class="input-surface w-full rounded-xl px-3 py-2 text-sm focus:outline-none">
               <option value="paid">Pagado</option>
               <option value="pending">Pendiente</option>
               <option value="exempt">Beca / Exento</option>
@@ -523,153 +793,16 @@
           </div>
         </div>
 
-        <button id="btnSavePlayer" type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-lg py-2.5 text-sm transition">
+        <button id="btnSavePlayer" type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black rounded-xl py-2.5 text-sm transition">
           Guardar Ficha en Supabase
         </button>
       </form>
     </div>
   </div>
 
-  <footer class="no-print border-t py-4 text-center text-xs footer-text border-slate-800">
-    SportPlatform Cloud • Sincronización completa con Supabase PostgreSQL & Generador de Informes PDF
+  <footer class="no-print border-t py-4 text-center text-xs text-muted-custom border-slate-700/60 dark:border-slate-800">
+    SportPlatform • Gestión Deportiva, Actas por Jornada y Auditoría Ejecutiva
   </footer>
-
-  <style>
-    /* Estilos dinámicos para cambio de Tema (Modo Claro vs Modo Oscuro) */
-    html.dark {
-      color-scheme: dark;
-    }
-    html.dark body {
-      background-color: #020617; /* Slate 950 */
-      color: #f8fafc;
-    }
-    html.dark .card-box {
-      background-color: #0f172a; /* Slate 900 */
-      border-color: #1e293b;
-    }
-    html.dark .inner-box {
-      background-color: #020617;
-      border-color: #1e293b;
-    }
-    html.dark .input-field {
-      background-color: #020617;
-      border: 1px solid #1e293b;
-      color: #f8fafc;
-    }
-    html.dark .table-thead {
-      background-color: #020617;
-      color: #94a3b8;
-    }
-    html.dark .table-header-border {
-      border-color: #1e293b;
-    }
-    html.dark .table-divide > :not([hidden]) ~ :not([hidden]) {
-      border-color: #1e293b;
-    }
-
-    /* Modo Claro (Blanco) */
-    html.light {
-      color-scheme: light;
-    }
-    html.light body {
-      background-color: #f8fafc;
-      color: #0f172a;
-    }
-    html.light header {
-      background-color: rgba(255, 255, 255, 0.95) !important;
-      border-color: #e2e8f0 !important;
-    }
-    html.light .header-title {
-      color: #0f172a !important;
-    }
-    html.light .header-sub {
-      color: #64748b !important;
-    }
-    html.light .club-badge-box {
-      background-color: #f1f5f9 !important;
-      border-color: #cbd5e1 !important;
-      color: #0f172a !important;
-    }
-    html.light .card-box {
-      background-color: #ffffff;
-      border-color: #e2e8f0;
-      color: #0f172a;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    }
-    html.light .inner-box {
-      background-color: #f8fafc;
-      border-color: #e2e8f0;
-      color: #0f172a;
-    }
-    html.light .input-field {
-      background-color: #ffffff;
-      border: 1px solid #cbd5e1;
-      color: #0f172a;
-    }
-    html.light .table-thead {
-      background-color: #f1f5f9;
-      color: #475569;
-    }
-    html.light .table-header-border {
-      border-color: #e2e8f0;
-    }
-    html.light .table-divide > :not([hidden]) ~ :not([hidden]) {
-      border-color: #f1f5f9;
-    }
-    html.light .footer-text {
-      border-color: #e2e8f0;
-      color: #94a3b8;
-    }
-    html.light #clubHeaderBanner {
-      background: linear-gradient(to right, #ffffff, #f1f5f9) !important;
-      border-color: #e2e8f0 !important;
-    }
-    html.light #currentClubTitle {
-      color: #0f172a !important;
-    }
-
-    /* REGLAS EXCLUSIVAS PARA EXPORTACIÓN A PDF / IMPRESIÓN (@media print) */
-    .print-only {
-      display: none;
-    }
-    @media print {
-      body {
-        background-color: #ffffff !important;
-        color: #000000 !important;
-        padding: 0 !important;
-      }
-      .no-print {
-        display: none !important;
-      }
-      .print-only {
-        display: block !important;
-      }
-      .card-box, .inner-box {
-        background-color: #ffffff !important;
-        border-color: #d1d5db !important;
-        color: #000000 !important;
-        box-shadow: none !important;
-      }
-      .table-thead {
-        background-color: #f3f4f6 !important;
-        color: #111827 !important;
-      }
-      table {
-        font-size: 10px !important;
-      }
-      th, td {
-        padding: 4px 6px !important;
-      }
-      #clubHeaderBanner {
-        background: #f9fafb !important;
-        border: 1px solid #e5e7eb !important;
-      }
-      .print-kpis {
-        grid-template-columns: repeat(4, 1fr) !important;
-        gap: 8px !important;
-      }
-    }
-  </style>
 
   <script>
     // --- CREDENCIALES DE SUPABASE ---
@@ -686,22 +819,35 @@
     let jugadores = [];
     let actasPartidos = [];
 
-    // Instancias de Chart.js
+    // Chart.js & Jugador Activo
     let chartMinutesInstance = null;
     let chartRadarInstance = null;
     let jugadorSeleccionadoActual = null;
 
-    // Control de tema (oscuro por defecto)
+    // Control de tema (dark por defecto o guardado)
     let currentTheme = localStorage.getItem('theme') || 'dark';
 
     window.addEventListener('DOMContentLoaded', async () => {
       aplicarTema(currentTheme);
+      poblarDesplegableJornadas();
+      document.getElementById('matchDateInput').valueAsDate = new Date();
       actualizarOpcionesCategorias();
       await cargarTodoDesdeSupabase();
     });
 
     // ==========================================
-    // SISTEMA DE CAMBIO DE TEMA (CLARO / OSCURO)
+    // MEJORA 2: DESPLEGABLE DE JORNADAS
+    // ==========================================
+    function poblarDesplegableJornadas() {
+      const select = document.getElementById('matchJourneySelect');
+      select.innerHTML = "";
+      for (let i = 1; i <= 38; i++) {
+        select.innerHTML += `<option value="Jornada ${i}">Jornada ${i}</option>`;
+      }
+    }
+
+    // ==========================================
+    // MEJORA 3: SISTEMA DE CAMBIO DE TEMA Y CONTRASTE
     // ==========================================
     function toggleTheme() {
       currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
@@ -725,13 +871,13 @@
         html.classList.add('light');
         themeIcon.innerText = "🌙";
         themeText.innerText = "Modo Oscuro";
-        themeBtn.className = "p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center gap-1.5 text-xs font-semibold";
+        themeBtn.className = "p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl border border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200 transition flex items-center gap-1.5 text-xs font-bold shadow-sm";
       } else {
         html.classList.remove('light');
         html.classList.add('dark');
         themeIcon.innerText = "☀️";
         themeText.innerText = "Modo Claro";
-        themeBtn.className = "p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:text-white transition flex items-center gap-1.5 text-xs font-medium";
+        themeBtn.className = "p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:text-white transition flex items-center gap-1.5 text-xs font-semibold";
       }
     }
 
@@ -756,7 +902,13 @@
               name: 'CD Cantera Olímpica',
               structure: 'grassroots',
               category: 'Cadete',
-              total_budget: 15000
+              total_budget: 15000,
+              address: 'Av. del Deporte 14, Valencia',
+              phone: '+34 960 123 456',
+              email: 'info@canteraolimpica.es',
+              website: 'https://canteraolimpica.es',
+              stadium: 'Polideportivo Municipal',
+              founded_year: 2012
             }])
             .select()
             .single();
@@ -839,7 +991,139 @@
     }
 
     // ==========================================
-    // FILTROS Y BÚSQUEDA EN TIEMPO REAL
+    // ACTUALIZACIÓN DE VISTAS Y BANNER DE CLUB
+    // ==========================================
+    function actualizarVistasDashboard() {
+      if (!clubActivo) return;
+
+      const isBase = clubActivo.structure === 'grassroots';
+      const budget = Number(clubActivo.total_budget) || 1;
+      const statsList = obtenerEstadisticasConsolidadas();
+
+      // MEJORA 1: Pintar los datos extendidos del Club
+      document.getElementById('currentClubTitle').innerText = clubActivo.name;
+      document.getElementById('clubCategoryBadge').innerText = clubActivo.category || 'General';
+      document.getElementById('clubFoundationBadge').innerText = clubActivo.founded_year ? `Fundación: ${clubActivo.founded_year}` : 'Fundación: N/D';
+
+      // Dirección con Enlace a Google Maps
+      const addrElem = document.getElementById('clubAddressDisplay');
+      if (clubActivo.address && clubActivo.address.trim() !== "") {
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clubActivo.address)}`;
+        addrElem.innerHTML = `📍 <a href="${mapsUrl}" target="_blank" rel="noopener" class="underline hover:text-emerald-400 font-semibold" title="Abrir en Google Maps">${clubActivo.address}</a>`;
+      } else {
+        addrElem.innerHTML = `📍 <span class="italic text-slate-500">Sin dirección</span>`;
+      }
+
+      // Teléfono
+      const phoneElem = document.getElementById('clubPhoneDisplay');
+      if (clubActivo.phone) {
+        phoneElem.innerHTML = `📞 <a href="tel:${clubActivo.phone}" class="hover:underline font-semibold">${clubActivo.phone}</a>`;
+      } else {
+        phoneElem.innerHTML = `📞 <span class="italic text-slate-500">--</span>`;
+      }
+
+      // Email
+      const emailElem = document.getElementById('clubEmailDisplay');
+      if (clubActivo.email) {
+        emailElem.innerHTML = `✉️ <a href="mailto:${clubActivo.email}" class="hover:underline font-semibold">${clubActivo.email}</a>`;
+      } else {
+        emailElem.innerHTML = `✉️ <span class="italic text-slate-500">--</span>`;
+      }
+
+      // Web
+      const webElem = document.getElementById('clubWebDisplay');
+      if (clubActivo.website) {
+        const cleanUrl = clubActivo.website.startsWith('http') ? clubActivo.website : `https://${clubActivo.website}`;
+        webElem.innerHTML = `🌐 <a href="${cleanUrl}" target="_blank" rel="noopener" class="underline hover:text-sky-400 font-semibold">Web Oficial</a>`;
+      } else {
+        webElem.innerHTML = `🌐 <span class="italic text-slate-500">--</span>`;
+      }
+
+      // Estadio
+      const stadElem = document.getElementById('clubStadiumDisplay');
+      stadElem.innerHTML = `🏟️ <span class="font-semibold">${clubActivo.stadium || 'Campo Principal'}</span>`;
+
+      // Badge de tipo
+      const typeBadge = document.getElementById('clubTypeBadge');
+      if (isBase) {
+        typeBadge.innerText = "Fútbol Base";
+        typeBadge.className = "text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+        document.getElementById('kpi1Title').innerText = "Recaudación Cuotas";
+        document.getElementById('thEconomy').innerText = "Cuota Anual";
+      } else {
+        typeBadge.innerText = "Club Profesional";
+        typeBadge.className = "text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30";
+        document.getElementById('kpi1Title').innerText = "Gasto Masa Salarial";
+        document.getElementById('thEconomy').innerText = "Salario Anual";
+      }
+
+      // Sumatorios
+      const totalEconomico = statsList.reduce((acc, j) => {
+        const val = Number(j.annual_salary) || 0;
+        if (isBase) return j.fee_status === 'paid' ? acc + val : acc;
+        return acc + val;
+      }, 0);
+
+      const totalMins = statsList.reduce((acc, j) => acc + j.minutes, 0);
+      const totalGoles = statsList.reduce((acc, j) => acc + j.goals, 0);
+      const totalAsist = statsList.reduce((acc, j) => acc + j.assists, 0);
+      const totalAmarillas = statsList.reduce((acc, j) => acc + j.yellows, 0);
+      const totalRojas = statsList.reduce((acc, j) => acc + j.reds, 0);
+
+      document.getElementById('kpi1Value').innerText = totalEconomico.toLocaleString('es-ES') + " €";
+      const pct = ((totalEconomico / budget) * 100).toFixed(0);
+      document.getElementById('kpi1Sub').innerText = isBase 
+        ? `${pct}% del presupuesto cubierto`
+        : `${pct}% del límite salarial consumido`;
+
+      document.getElementById('kpi2Value').innerText = `${totalMins} min`;
+      const mediaMins = statsList.length > 0 ? Math.round(totalMins / statsList.length) : 0;
+      document.getElementById('kpi2Sub').innerText = `${mediaMins} min media por jugador`;
+
+      document.getElementById('kpi3Value').innerText = `${totalGoles} / ${totalAsist}`;
+      document.getElementById('kpi3Sub').innerText = `${totalGoles + totalAsist} acciones ofensivas directas`;
+
+      document.getElementById('kpi4Value').innerText = `${totalAmarillas} 🟨 | ${totalRojas} 🟥`;
+      document.getElementById('kpi4Sub').innerText = `${(totalAmarillas / (statsList.length || 1)).toFixed(1)} tarjetas/jugador`;
+
+      // Diagnóstico adaptativo
+      if (isBase) {
+        document.getElementById('diagnosisHeader').innerHTML = '<span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Índice de Equidad Formativa';
+        document.getElementById('diagnosisDescription').innerText = 'Detección automática en base de datos de jugadores con poca participación para garantizar el aprendizaje equitativo.';
+        document.getElementById('metricDiagTitle1').innerText = "Minutos promedio esperados";
+        document.getElementById('metricDiagVal1').innerText = `${mediaMins} min`;
+
+        const descolgados = statsList.filter(j => j.minutes < (mediaMins * 0.45));
+        const val2 = document.getElementById('metricDiagVal2');
+        if (descolgados.length > 0) {
+          val2.innerText = `⚠️ ${descolgados.length} jugador(es) con muy pocos minutos`;
+          val2.className = "text-sm font-bold text-amber-400 mt-0.5 block";
+        } else {
+          val2.innerText = `✅ Reparto de minutos equilibrado`;
+          val2.className = "text-sm font-bold text-emerald-400 mt-0.5 block";
+        }
+      } else {
+        document.getElementById('diagnosisHeader').innerHTML = '<span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span> Eficiencia Financiera de Plantilla';
+        document.getElementById('diagnosisDescription').innerText = 'Auditoría en tiempo real de coste por minuto efectivo según los partidos disputados registrados en Supabase.';
+        document.getElementById('metricDiagTitle1').innerText = "Coste Medio por Minuto";
+        const costeMin = totalMins > 0 ? (totalEconomico / totalMins) : 0;
+        document.getElementById('metricDiagVal1').innerText = `${costeMin.toFixed(2)} €/min`;
+
+        const val2 = document.getElementById('metricDiagVal2');
+        if (pct > 70) {
+          val2.innerText = `🚨 Límite salarial en riesgo (>70%)`;
+          val2.className = "text-sm font-bold text-rose-400 mt-0.5 block";
+        } else {
+          val2.innerText = `✅ Masa salarial dentro de norma`;
+          val2.className = "text-sm font-bold text-emerald-400 mt-0.5 block";
+        }
+      }
+
+      aplicarFiltrosYBusqueda();
+    }
+
+    // ==========================================
+    // FILTROS Y BÚSQUEDA
     // ==========================================
     function actualizarFiltrosSegunEstructuraClub() {
       const isBase = clubActivo && clubActivo.structure === 'grassroots';
@@ -882,15 +1166,12 @@
       const mediaMins = statsList.length > 0 ? Math.round(totalMins / statsList.length) : 0;
 
       const filtrados = statsList.filter(j => {
-        // Filtro por Búsqueda (Nombre o Dorsal)
         const matchSearch = !searchVal || 
           j.full_name.toLowerCase().includes(searchVal) || 
           String(j.dorsal).includes(searchVal);
 
-        // Filtro por Posición
         const matchPos = posVal === "ALL" || j.position === posVal;
 
-        // Filtro por Estado (Cuotas en Base o Rentabilidad en Pro)
         let matchStatus = true;
         if (statusVal !== "ALL") {
           if (isBase) {
@@ -902,13 +1183,9 @@
           } else {
             const salVal = Number(j.annual_salary) || 0;
             const cMin = j.minutes > 0 ? (salVal / j.minutes) : salVal;
-            if (statusVal === "OVERCOST") {
-              matchStatus = cMin > 45;
-            } else if (statusVal === "EFFICIENT") {
-              matchStatus = cMin <= 45;
-            } else {
-              matchStatus = j.fee_status === statusVal;
-            }
+            if (statusVal === "OVERCOST") matchStatus = cMin > 45;
+            else if (statusVal === "EFFICIENT") matchStatus = cMin <= 45;
+            else matchStatus = j.fee_status === statusVal;
           }
         }
 
@@ -918,96 +1195,6 @@
       renderizarTablaPlantilla(filtrados, mediaMins, isBase);
     }
 
-    // ==========================================
-    // ACTUALIZACIÓN DE VISTAS Y KPIS
-    // ==========================================
-    function actualizarVistasDashboard() {
-      if (!clubActivo) return;
-
-      const isBase = clubActivo.structure === 'grassroots';
-      const budget = Number(clubActivo.total_budget) || 1;
-      const statsList = obtenerEstadisticasConsolidadas();
-
-      document.getElementById('currentClubTitle').innerText = clubActivo.name;
-      document.getElementById('clubCategoryBadge').innerText = clubActivo.category || 'General';
-      const typeBadge = document.getElementById('clubTypeBadge');
-      
-      if (isBase) {
-        typeBadge.innerText = "Fútbol Base";
-        typeBadge.className = "text-xs font-bold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
-        document.getElementById('kpi1Title').innerText = "Recaudación Cuotas";
-        document.getElementById('thEconomy').innerText = "Cuota Anual";
-      } else {
-        typeBadge.innerText = "Club Profesional";
-        typeBadge.className = "text-xs font-bold uppercase px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30";
-        document.getElementById('kpi1Title').innerText = "Gasto Masa Salarial";
-        document.getElementById('thEconomy').innerText = "Salario Anual";
-      }
-
-      const totalEconomico = statsList.reduce((acc, j) => {
-        const val = Number(j.annual_salary) || 0;
-        if (isBase) return j.fee_status === 'paid' ? acc + val : acc;
-        return acc + val;
-      }, 0);
-
-      const totalMins = statsList.reduce((acc, j) => acc + j.minutes, 0);
-      const totalGoles = statsList.reduce((acc, j) => acc + j.goals, 0);
-      const totalAsist = statsList.reduce((acc, j) => acc + j.assists, 0);
-      const totalAmarillas = statsList.reduce((acc, j) => acc + j.yellows, 0);
-      const totalRojas = statsList.reduce((acc, j) => acc + j.reds, 0);
-
-      document.getElementById('kpi1Value').innerText = totalEconomico.toLocaleString('es-ES') + " €";
-      const pct = ((totalEconomico / budget) * 100).toFixed(0);
-      document.getElementById('kpi1Sub').innerText = isBase 
-        ? `${pct}% del presupuesto cubierto`
-        : `${pct}% del límite salarial consumido`;
-
-      document.getElementById('kpi2Value').innerText = `${totalMins} min`;
-      const mediaMins = statsList.length > 0 ? Math.round(totalMins / statsList.length) : 0;
-      document.getElementById('kpi2Sub').innerText = `${mediaMins} min media por jugador`;
-
-      document.getElementById('kpi3Value').innerText = `${totalGoles} / ${totalAsist}`;
-      document.getElementById('kpi3Sub').innerText = `${totalGoles + totalAsist} acciones de gol directas`;
-
-      document.getElementById('kpi4Value').innerText = `${totalAmarillas} 🟨 | ${totalRojas} 🟥`;
-      document.getElementById('kpi4Sub').innerText = `${(totalAmarillas / (statsList.length || 1)).toFixed(1)} tarjetas/jugador`;
-
-      if (isBase) {
-        document.getElementById('diagnosisHeader').innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400"></span> Índice de Equidad Formativa';
-        document.getElementById('diagnosisDescription').innerText = 'Detección automática en la base de datos de jugadores con poca participación para garantizar el aprendizaje equitativo.';
-        document.getElementById('metricDiagTitle1').innerText = "Minutos promedio esperados";
-        document.getElementById('metricDiagVal1').innerText = `${mediaMins} min`;
-
-        const descolgados = statsList.filter(j => j.minutes < (mediaMins * 0.45));
-        const val2 = document.getElementById('metricDiagVal2');
-        if (descolgados.length > 0) {
-          val2.innerText = `⚠️ ${descolgados.length} jugador(es) con muy pocos minutos`;
-          val2.className = "text-sm font-semibold text-amber-400 mt-0.5 block";
-        } else {
-          val2.innerText = `✅ Reparto de minutos equilibrado`;
-          val2.className = "text-sm font-semibold text-emerald-400 mt-0.5 block";
-        }
-      } else {
-        document.getElementById('diagnosisHeader').innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Eficiencia Financiera de Plantilla';
-        document.getElementById('diagnosisDescription').innerText = 'Auditoría en tiempo real de coste por minuto efectivo según los partidos disputados registrados en Supabase.';
-        document.getElementById('metricDiagTitle1').innerText = "Coste Medio por Minuto";
-        const costeMin = totalMins > 0 ? (totalEconomico / totalMins) : 0;
-        document.getElementById('metricDiagVal1').innerText = `${costeMin.toFixed(2)} €/min`;
-
-        const val2 = document.getElementById('metricDiagVal2');
-        if (pct > 70) {
-          val2.innerText = `🚨 Límite salarial en riesgo (>70%)`;
-          val2.className = "text-sm font-semibold text-rose-400 mt-0.5 block";
-        } else {
-          val2.innerText = `✅ Masa salarial dentro de norma`;
-          val2.className = "text-sm font-semibold text-emerald-400 mt-0.5 block";
-        }
-      }
-
-      aplicarFiltrosYBusqueda();
-    }
-
-    // Renderizar la tabla de plantilla con los datos procesados/filtrados
     function renderizarTablaPlantilla(listaAMostrar, mediaMins, isBase) {
       const tbody = document.getElementById('rosterTableBody');
       tbody.innerHTML = "";
@@ -1016,7 +1203,7 @@
       if (listaAMostrar.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="11" class="p-6 text-center text-slate-500">
+            <td colspan="11" class="p-6 text-center text-muted-custom">
               No se han encontrado jugadores con los filtros aplicados.
             </td>
           </tr>
@@ -1030,87 +1217,173 @@
 
         if (isBase) {
           const cuotaVal = Number(j.annual_salary) || 0;
-          if (j.fee_status === 'paid') badgeEconomico = `<span class="text-emerald-500 dark:text-emerald-400 font-semibold">${cuotaVal}€ (Pagado)</span>`;
-          else if (j.fee_status === 'pending') badgeEconomico = `<span class="text-amber-500 dark:text-amber-400 font-semibold">${cuotaVal}€ (Pendiente)</span>`;
-          else badgeEconomico = `<span class="text-slate-400">Beca / Exento</span>`;
+          if (j.fee_status === 'paid') badgeEconomico = `<span class="text-emerald-500 font-bold">${cuotaVal}€ (Pagado)</span>`;
+          else if (j.fee_status === 'pending') badgeEconomico = `<span class="text-amber-500 font-bold">${cuotaVal}€ (Pendiente)</span>`;
+          else badgeEconomico = `<span class="text-muted-custom font-medium">Beca</span>`;
 
           if (j.minutes < (mediaMins * 0.45) && mediaMins > 0) {
-            badgeDiag = '<span class="px-2 py-0.5 text-[11px] rounded bg-amber-900/40 text-amber-300 border border-amber-800">Dar Minutos</span>';
+            badgeDiag = '<span class="px-2 py-0.5 text-[11px] rounded-full bg-amber-900/30 text-amber-400 border border-amber-800/60 font-bold">Dar Minutos</span>';
           } else {
-            badgeDiag = '<span class="px-2 py-0.5 text-[11px] rounded bg-emerald-900/40 text-emerald-300 border border-emerald-800">Adecuado</span>';
+            badgeDiag = '<span class="px-2 py-0.5 text-[11px] rounded-full bg-emerald-900/30 text-emerald-400 border border-emerald-800/60 font-bold">Adecuado</span>';
           }
         } else {
           const salVal = Number(j.annual_salary) || 0;
-          badgeEconomico = `<span class="font-semibold">${salVal.toLocaleString('es-ES')} €</span>`;
+          badgeEconomico = `<span class="font-extrabold">${salVal.toLocaleString('es-ES')} €</span>`;
           const cMin = j.minutes > 0 ? (salVal / j.minutes) : salVal;
           if (cMin > 45) {
-            badgeDiag = '<span class="px-2 py-0.5 text-[11px] rounded bg-rose-900/40 text-rose-300 border border-rose-800">Sobrecoste</span>';
+            badgeDiag = '<span class="px-2 py-0.5 text-[11px] rounded-full bg-rose-900/30 text-rose-400 border border-rose-800/60 font-bold">Sobrecoste</span>';
           } else {
-            badgeDiag = '<span class="px-2 py-0.5 text-[11px] rounded bg-emerald-900/40 text-emerald-300 border border-emerald-800">Rentable</span>';
+            badgeDiag = '<span class="px-2 py-0.5 text-[11px] rounded-full bg-emerald-900/30 text-emerald-400 border border-emerald-800/60 font-bold">Rentable</span>';
           }
         }
 
         tbody.innerHTML += `
           <tr class="hover:bg-slate-800/40 dark:hover:bg-slate-800/40 light:hover:bg-slate-100 transition group cursor-pointer" onclick="abrirFichaDetalle('${j.id}')">
-            <td class="p-3 font-bold text-slate-400">#${j.dorsal || '-'}</td>
+            <td class="p-3 font-bold text-muted-custom">#${j.dorsal || '-'}</td>
             <td class="p-3">
-              <span class="font-bold text-emerald-400 hover:text-emerald-300 group-hover:underline flex items-center gap-1.5">
+              <span class="font-extrabold text-emerald-400 hover:text-emerald-300 group-hover:underline flex items-center gap-1.5">
                 ${j.full_name}
-                <span class="no-print text-[10px] text-slate-400 font-normal opacity-0 group-hover:opacity-100 transition">🔍 Ver ficha</span>
+                <span class="no-print text-[10px] text-muted-custom font-normal opacity-0 group-hover:opacity-100 transition">✏️ Ver / Editar</span>
               </span>
             </td>
-            <td class="p-3 text-slate-400">${j.position}</td>
+            <td class="p-3 text-muted-custom font-medium">${j.position}</td>
             <td class="p-3 text-right">${badgeEconomico}</td>
-            <td class="p-3 text-right font-medium">${j.matches}</td>
-            <td class="p-3 text-right font-bold text-sky-400">${j.minutes}'</td>
-            <td class="p-3 text-right font-bold text-emerald-400">${j.goals}</td>
-            <td class="p-3 text-right">${j.assists}</td>
+            <td class="p-3 text-right font-semibold">${j.matches}</td>
+            <td class="p-3 text-right font-black text-sky-400">${j.minutes}'</td>
+            <td class="p-3 text-right font-black text-emerald-400">${j.goals}</td>
+            <td class="p-3 text-right font-semibold">${j.assists}</td>
             <td class="p-3 text-center text-xs">
-              <span class="text-amber-400 font-semibold">${j.yellows}🟨</span>
-              <span class="text-rose-500 font-semibold ml-1">${j.reds}🟥</span>
+              <span class="text-amber-400 font-bold">${j.yellows}🟨</span>
+              <span class="text-rose-500 font-bold ml-1">${j.reds}🟥</span>
             </td>
             <td class="p-3 text-center">${badgeDiag}</td>
             <td class="p-3 text-center no-print" onclick="event.stopPropagation()">
-              <button onclick="eliminarJugadorSupabase('${j.id}', '${j.full_name}')" class="text-rose-400 hover:text-rose-300 text-xs">Eliminar</button>
+              <button onclick="eliminarJugadorSupabase('${j.id}', '${j.full_name}')" class="text-rose-400 hover:text-rose-300 text-xs font-semibold">Eliminar</button>
             </td>
           </tr>
         `;
       });
     }
 
-    // ========================================================
-    // GENERADOR DE INFORMES EJECUTIVOS (EXPORTAR PDF / IMPRIMIR)
-    // ========================================================
-    function generarInformeEjecutivoPDF() {
-      if (!clubActivo) {
-        alert("Selecciona un club antes de generar el informe");
-        return;
-      }
+    // ==========================================
+    // MEJORA 1: MODAL DE EDICIÓN DEL CLUB
+    // ==========================================
+    function abrirModalEditarClub() {
+      if (!clubActivo) return;
 
-      const isBase = clubActivo.structure === 'grassroots';
-      const fechaHoy = new Date().toLocaleDateString('es-ES', { 
-        year: 'numeric', month: 'long', day: 'numeric' 
-      });
+      document.getElementById('editClubName').value = clubActivo.name || '';
+      document.getElementById('editClubStadium').value = clubActivo.stadium || '';
+      document.getElementById('editClubStructure').value = clubActivo.structure || 'grassroots';
+      document.getElementById('editClubFounded').value = clubActivo.founded_year || '';
+      document.getElementById('editClubAddress').value = clubActivo.address || '';
+      document.getElementById('editClubPhone').value = clubActivo.phone || '';
+      document.getElementById('editClubEmail').value = clubActivo.email || '';
+      document.getElementById('editClubWebsite').value = clubActivo.website || '';
+      document.getElementById('editClubBudget').value = clubActivo.total_budget || 0;
 
-      // Configurar cabecera formal para la impresión
-      document.getElementById('printClubTitle').innerText = `${clubActivo.name} (${clubActivo.category || 'General'})`;
-      document.getElementById('printDate').innerText = fechaHoy;
-      
-      if (isBase) {
-        document.getElementById('printDocSubtitle').innerText = "BALANCE DE TEMPORADA • FÚTBOL BASE (EQUIDAD FORMATIVA & COBROS DE CUOTA)";
-        document.getElementById('printAuditor').innerText = "Informe emitido para Junta Directiva y Familias";
-      } else {
-        document.getElementById('printDocSubtitle').innerText = "AUDITORÍA EJECUTIVA DE PLANTILLA • CONTROL SALARIAL Y EFICIENCIA DEPORTIVA";
-        document.getElementById('printAuditor').innerText = "Informe para Propiedad y Dirección General";
-      }
+      adaptarCategoriasEnEdicion();
+      document.getElementById('editClubCategory').value = clubActivo.category || '';
 
-      // Lanzar cuadro de impresión nativo del navegador (Guardar como PDF)
-      window.print();
+      document.getElementById('editClubModal').classList.remove('hidden');
     }
 
-    // ========================================================
-    // FICHA INDIVIDUAL DE DETALLE & GRÁFICOS (CHART.JS)
-    // ========================================================
+    function adaptarCategoriasEnEdicion() {
+      const tipo = document.getElementById('editClubStructure').value;
+      const selectCat = document.getElementById('editClubCategory');
+      const labelBudget = document.getElementById('editBudgetLabel');
+      
+      selectCat.innerHTML = "";
+      const lista = tipo === 'grassroots' ? CATEGORIAS_BASE : CATEGORIAS_PRO;
+      lista.forEach(cat => {
+        selectCat.innerHTML += `<option value="${cat}">${cat}</option>`;
+      });
+
+      labelBudget.innerText = tipo === 'grassroots' 
+        ? "Presupuesto Anual Escuela (€)" 
+        : "Límite de Masa Salarial (€)";
+    }
+
+    function probarEnlaceGoogleMaps() {
+      const direccion = document.getElementById('editClubAddress').value.trim();
+      if (!direccion) {
+        alert("Escribe primero una dirección para probar el enlace");
+        return;
+      }
+      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccion)}`, '_blank');
+    }
+
+    async function actualizarClubEnSupabase(e) {
+      e.preventDefault();
+      if (!clubActivo) return;
+
+      const btn = document.getElementById('btnUpdateClub');
+      btn.innerText = "Actualizando...";
+      btn.disabled = true;
+
+      const payload = {
+        name: document.getElementById('editClubName').value,
+        stadium: document.getElementById('editClubStadium').value,
+        structure: document.getElementById('editClubStructure').value,
+        category: document.getElementById('editClubCategory').value,
+        founded_year: parseInt(document.getElementById('editClubFounded').value) || null,
+        address: document.getElementById('editClubAddress').value,
+        phone: document.getElementById('editClubPhone').value,
+        email: document.getElementById('editClubEmail').value,
+        website: document.getElementById('editClubWebsite').value,
+        total_budget: parseFloat(document.getElementById('editClubBudget').value) || 0
+      };
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('clubs')
+          .update(payload)
+          .eq('id', clubActivo.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        // Actualizar en memoria local
+        Object.assign(clubActivo, data);
+        const idx = clubes.findIndex(c => c.id === clubActivo.id);
+        if (idx !== -1) clubes[idx] = clubActivo;
+
+        renderizarSelectorClubes();
+        actualizarFiltrosSegunEstructuraClub();
+        actualizarVistasDashboard();
+        cerrarModal('editClubModal');
+        alert("¡Datos del club actualizados con éxito!");
+      } catch (err) {
+        console.error("Error al actualizar club:", err);
+        alert("Error al actualizar club en Supabase: " + err.message);
+      } finally {
+        btn.innerText = "Guardar Cambios en Club";
+        btn.disabled = false;
+      }
+    }
+
+    // ==========================================
+    // MEJORA 2: FICHA DE JUGADOR Y EDICIÓN DIRECTA
+    // ==========================================
+    function cambiarPestanaModalJugador(tab) {
+      const viewContent = document.getElementById('playerViewTabContent');
+      const editContent = document.getElementById('playerEditTabContent');
+      const viewBtn = document.getElementById('tabPlayerViewBtn');
+      const editBtn = document.getElementById('tabPlayerEditBtn');
+
+      if (tab === 'view') {
+        viewContent.classList.remove('hidden');
+        editContent.classList.add('hidden');
+        viewBtn.className = "flex-1 sm:flex-initial px-4 py-1.5 rounded-xl bg-emerald-500 text-slate-950 font-bold transition";
+        editBtn.className = "flex-1 sm:flex-initial px-4 py-1.5 rounded-xl text-muted-custom hover:text-white font-bold transition";
+      } else {
+        viewContent.classList.add('hidden');
+        editContent.classList.remove('hidden');
+        editBtn.className = "flex-1 sm:flex-initial px-4 py-1.5 rounded-xl bg-emerald-500 text-slate-950 font-bold transition";
+        viewBtn.className = "flex-1 sm:flex-initial px-4 py-1.5 rounded-xl text-muted-custom hover:text-white font-bold transition";
+      }
+    }
+
     function abrirFichaDetalle(playerId) {
       const statsList = obtenerEstadisticasConsolidadas();
       const jugador = statsList.find(j => j.id === playerId);
@@ -1119,6 +1392,7 @@
       jugadorSeleccionadoActual = jugador;
       const isBase = clubActivo.structure === 'grassroots';
 
+      // Cabecera Ficha
       document.getElementById('detailPlayerDorsal').innerText = `#${jugador.dorsal || '-'}`;
       document.getElementById('detailPlayerName').innerText = jugador.full_name;
       document.getElementById('detailPlayerPosition').innerText = jugador.position;
@@ -1144,6 +1418,7 @@
         statusBadge.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/20 text-sky-400 border border-sky-500/30";
       }
 
+      // Rellenar métricas rápidas
       document.getElementById('detailMinutes').innerText = `${jugador.minutes}'`;
       const avgMins = jugador.matches > 0 ? Math.round(jugador.minutes / jugador.matches) : 0;
       document.getElementById('detailMinutesAvg').innerText = `${avgMins}' por partido (${jugador.matches} pj)`;
@@ -1154,65 +1429,47 @@
 
       document.getElementById('detailAssists').innerText = jugador.assists;
       document.getElementById('detailGoalContribution').innerText = `${jugador.goals + jugador.assists} goles generados`;
-
       document.getElementById('detailCards').innerText = `${jugador.yellows}🟨  ${jugador.reds}🟥`;
 
-      let score = 7.0;
-      if (jugador.matches > 0) {
-        score += Math.min(jugador.goals * 0.4 + jugador.assists * 0.3, 2.5);
-        if (jugador.yellows > 2) score -= 0.5;
-        if (jugador.reds > 0) score -= 1.0;
-      }
-      document.getElementById('detailScoreValue').innerText = `${score.toFixed(1)} / 10`;
-
-      let scoutNotes = "";
-      if (isBase) {
-        scoutNotes = `${jugador.full_name} demuestra una excelente actitud formativa. `;
-        if (avgMins >= 40) {
-          scoutNotes += "Ha acumulado un volumen idóneo de minutos competitivos, consolidando su confianza en la posición de " + jugador.position.toLowerCase() + ".";
-          document.getElementById('detailDiagnosisTag').innerText = "Formativo Adecuado (Volumen Óptimo)";
-          document.getElementById('detailDiagnosisTag').className = "font-semibold text-emerald-400";
-        } else {
-          scoutNotes += "Requiere mayor protagonismo en los próximos compromisos para acelerar su progresión táctica y evitar descolgarse del ritmo grupal.";
-          document.getElementById('detailDiagnosisTag').innerText = "Plan de Minutos Prioritario";
-          document.getElementById('detailDiagnosisTag').className = "font-semibold text-amber-400";
-        }
-      } else {
-        const cMin = jugador.minutes > 0 ? (ecoVal / jugador.minutes) : ecoVal;
-        scoutNotes = `Auditoría financiera: Coste por minuto activo situado en ${cMin.toFixed(2)} €/min. `;
-        if (cMin > 45) {
-          scoutNotes += "Impacto económico elevado para los minutos computados. Se recomienda evaluar titularidad o salida en ventana de mercado.";
-          document.getElementById('detailDiagnosisTag').innerText = "Sobrecoste Salarial";
-          document.getElementById('detailDiagnosisTag').className = "font-semibold text-rose-400";
-        } else {
-          scoutNotes += "Alta rentabilidad en ratio salario-rendimiento sobre el césped.";
-          document.getElementById('detailDiagnosisTag').innerText = "Rendimiento Rentable";
-          document.getElementById('detailDiagnosisTag').className = "font-semibold text-emerald-400";
-        }
-      }
-      document.getElementById('detailScoutNotes').innerText = scoutNotes;
-
+      // Rellenar tabla de historial de actas (con botón de eliminar acta individual)
       const histBody = document.getElementById('detailMatchHistoryBody');
       histBody.innerHTML = "";
       if (!jugador.matchList || jugador.matchList.length === 0) {
-        histBody.innerHTML = `<tr><td colspan="5" class="py-3 text-center text-slate-500">Aún no se han registrado partidos para este jugador.</td></tr>`;
+        histBody.innerHTML = `<tr><td colspan="6" class="py-3 text-center text-muted-custom">Aún no hay actas para este jugador.</td></tr>`;
       } else {
-        jugador.matchList.forEach((m, idx) => {
+        jugador.matchList.forEach((m) => {
           histBody.innerHTML += `
             <tr class="hover:bg-slate-800/30">
-              <td class="py-2 px-2 text-slate-300 font-medium">Jornada ${idx + 1} (${m.match_date || 'Reciente'})</td>
-              <td class="py-2 px-2 text-right font-bold text-sky-400">${m.minutes_played || 0}'</td>
-              <td class="py-2 px-2 text-right font-bold text-emerald-400">${m.goals || 0}</td>
-              <td class="py-2 px-2 text-right text-slate-300">${m.assists || 0}</td>
-              <td class="py-2 px-2 text-center text-xs">
-                <span class="text-amber-400">${m.yellow_cards || 0}🟨</span>
-                <span class="text-rose-500 ml-1">${m.red_cards || 0}🟥</span>
+              <td class="py-2 px-2.5 font-bold text-sky-400">${m.journey || 'Jornada'} <span class="text-muted-custom font-normal text-[11px]">(${m.match_date || ''})</span></td>
+              <td class="py-2 px-2.5 text-right font-black text-sky-400">${m.minutes_played || 0}'</td>
+              <td class="py-2 px-2.5 text-right font-black text-emerald-400">${m.goals || 0}</td>
+              <td class="py-2 px-2.5 text-right font-semibold">${m.assists || 0}</td>
+              <td class="py-2 px-2.5 text-center text-xs">
+                <span class="text-amber-400 font-bold">${m.yellow_cards || 0}🟨</span>
+                <span class="text-rose-500 font-bold ml-1">${m.red_cards || 0}🟥</span>
+              </td>
+              <td class="py-2 px-2.5 text-center">
+                <button onclick="eliminarActaPartidoSupabase('${m.id}')" class="text-rose-400 hover:text-rose-300 text-xs" title="Borrar esta acta">🗑️</button>
               </td>
             </tr>
           `;
         });
       }
 
+      // Preparar el formulario de edición de este jugador
+      document.getElementById('editPlayerName').value = jugador.full_name;
+      document.getElementById('editPlayerDorsal').value = jugador.dorsal || 1;
+      document.getElementById('editPlayerPos').value = jugador.position;
+      document.getElementById('editPlayerFee').value = jugador.annual_salary || 0;
+      document.getElementById('editPlayerFeeLabel').innerText = isBase ? "Cuota Anual (€)" : "Salario Anual (€)";
+
+      const selStatus = document.getElementById('editPlayerStatus');
+      selStatus.innerHTML = isBase 
+        ? '<option value="paid">Pagado (Al día)</option><option value="pending">Pendiente</option><option value="exempt">Beca / Exento</option>'
+        : '<option value="contract">Contrato en vigor</option><option value="cedido">Cedido</option>';
+      selStatus.value = jugador.fee_status || (isBase ? 'paid' : 'contract');
+
+      cambiarPestanaModalJugador('view');
       renderizarGraficosJugador(jugador);
       document.getElementById('playerDetailModal').classList.remove('hidden');
     }
@@ -1221,16 +1478,140 @@
       document.getElementById('playerDetailModal').classList.add('hidden');
     }
 
+    // Actualizar Jugador en Supabase desde el Modal
+    async function actualizarJugadorEnSupabase(e) {
+      e.preventDefault();
+      if (!jugadorSeleccionadoActual) return;
+
+      const btn = document.getElementById('btnUpdatePlayer');
+      btn.innerText = "Actualizando...";
+      btn.disabled = true;
+
+      const payload = {
+        full_name: document.getElementById('editPlayerName').value,
+        dorsal: parseInt(document.getElementById('editPlayerDorsal').value) || 1,
+        position: document.getElementById('editPlayerPos').value,
+        annual_salary: parseFloat(document.getElementById('editPlayerFee').value) || 0,
+        fee_status: document.getElementById('editPlayerStatus').value
+      };
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('players')
+          .update(payload)
+          .eq('id', jugadorSeleccionadoActual.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        // Actualizar en memoria local
+        const idx = jugadores.findIndex(j => j.id === jugadorSeleccionadoActual.id);
+        if (idx !== -1) jugadores[idx] = data;
+
+        actualizarVistasDashboard();
+        actualizarSelectorJugadoresActa();
+        abrirFichaDetalle(data.id);
+        alert(`¡Ficha de ${data.full_name} actualizada correctamente!`);
+      } catch (err) {
+        console.error("Error al actualizar jugador:", err);
+        alert("Error al actualizar en Supabase: " + err.message);
+      } finally {
+        btn.innerText = "Guardar Cambios del Jugador";
+        btn.disabled = false;
+      }
+    }
+
+    // ==========================================
+    // MEJORA 2: REGISTRO DE ACTA CON JORNADA
+    // ==========================================
+    async function guardarActaPartidoEnSupabase(e) {
+      e.preventDefault();
+      const playerId = document.getElementById('matchSelectPlayer').value;
+      if (!playerId) {
+        alert("Selecciona un jugador");
+        return;
+      }
+
+      const btn = document.getElementById('btnSaveMatch');
+      btn.innerText = "Guardando acta...";
+      btn.disabled = true;
+
+      const jornada = document.getElementById('matchJourneySelect').value;
+      const fecha = document.getElementById('matchDateInput').value || new Date().toISOString().split('T')[0];
+      const mins = parseInt(document.getElementById('matchMins').value) || 0;
+      const goles = parseInt(document.getElementById('matchGoals').value) || 0;
+      const asist = parseInt(document.getElementById('matchAssists').value) || 0;
+      const amarillas = parseInt(document.getElementById('matchYellows').value) || 0;
+      const rojas = parseInt(document.getElementById('matchReds').value) || 0;
+
+      try {
+        const { data: nuevaActa, error } = await supabaseClient
+          .from('match_performances')
+          .insert([{
+            player_id: playerId,
+            journey: jornada,
+            match_date: fecha,
+            minutes_played: mins,
+            goals: goles,
+            assists: asist,
+            yellow_cards: amarillas,
+            red_cards: rojas
+          }])
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        actasPartidos.push(nuevaActa);
+        actualizarVistasDashboard();
+        e.target.reset();
+        document.getElementById('matchDateInput').valueAsDate = new Date();
+        alert(`¡Acta guardada para ${jornada}!`);
+      } catch (err) {
+        console.error("Error guardando acta:", err);
+        alert("Error al guardar en Supabase: " + err.message);
+      } finally {
+        btn.innerText = "+ Guardar Acta Jornada";
+        btn.disabled = false;
+      }
+    }
+
+    async function eliminarActaPartidoSupabase(actaId) {
+      if (!confirm("¿Deseas eliminar este registro de partido?")) return;
+
+      try {
+        const { error } = await supabaseClient
+          .from('match_performances')
+          .delete()
+          .eq('id', actaId);
+
+        if (error) throw error;
+
+        actasPartidos = actasPartidos.filter(m => m.id !== actaId);
+        actualizarVistasDashboard();
+        if (jugadorSeleccionadoActual) {
+          abrirFichaDetalle(jugadorSeleccionadoActual.id);
+        }
+      } catch (err) {
+        console.error("Error al borrar acta:", err);
+        alert("Error al borrar acta: " + err.message);
+      }
+    }
+
+    // ==========================================
+    // GRÁFICOS (CHART.JS)
+    // ==========================================
     function renderizarGraficosJugador(jugador) {
       const isLight = document.documentElement.classList.contains('light');
-      const textColor = isLight ? '#475569' : '#94a3b8';
-      const gridColor = isLight ? '#e2e8f0' : '#1e293b';
+      const textColor = isLight ? '#1e293b' : '#94a3b8';
+      const gridColor = isLight ? '#cbd5e1' : '#1e293b';
 
       if (chartMinutesInstance) chartMinutesInstance.destroy();
       if (chartRadarInstance) chartRadarInstance.destroy();
 
       const labelsPartidos = jugador.matchList && jugador.matchList.length > 0 
-        ? jugador.matchList.map((_, i) => `Jornada ${i + 1}`)
+        ? jugador.matchList.map((m, i) => m.journey ? m.journey.replace('Jornada ', 'J') : `J${i + 1}`)
         : ['J1', 'J2', 'J3', 'J4', 'J5'];
 
       const dataMinutos = jugador.matchList && jugador.matchList.length > 0
@@ -1263,11 +1644,11 @@
               beginAtZero: true,
               max: 90,
               grid: { color: gridColor },
-              ticks: { color: textColor, font: { size: 10 } }
+              ticks: { color: textColor, font: { size: 10, weight: 'bold' } }
             },
             x: {
               grid: { display: false },
-              ticks: { color: textColor, font: { size: 10 } }
+              ticks: { color: textColor, font: { size: 10, weight: 'bold' } }
             }
           }
         }
@@ -1319,28 +1700,61 @@
     }
 
     // ==========================================
-    // OPERACIONES EN SUPABASE (CLUB, JUGADOR, ACTA)
+    // EXPORTACIÓN A PDF / IMPRESIÓN FORMAL
+    // ==========================================
+    function generarInformeEjecutivoPDF() {
+      if (!clubActivo) {
+        alert("Selecciona un club antes de generar el informe");
+        return;
+      }
+
+      const isBase = clubActivo.structure === 'grassroots';
+      const fechaHoy = new Date().toLocaleDateString('es-ES', { 
+        year: 'numeric', month: 'long', day: 'numeric' 
+      });
+
+      document.getElementById('printClubTitle').innerText = `${clubActivo.name} (${clubActivo.category || 'General'})`;
+      document.getElementById('printDate').innerText = fechaHoy;
+      
+      const detallesContacto = [
+        clubActivo.stadium,
+        clubActivo.address,
+        clubActivo.phone ? `Tel: ${clubActivo.phone}` : null,
+        clubActivo.email
+      ].filter(Boolean).join(" • ");
+      document.getElementById('printClubContactDetails').innerText = detallesContacto;
+
+      if (isBase) {
+        document.getElementById('printDocSubtitle').innerText = "BALANCE DE TEMPORADA • FÚTBOL BASE (EQUIDAD FORMATIVA & COBROS DE CUOTA)";
+        document.getElementById('printAuditor').innerText = "Informe emitido para Junta Directiva y Familias";
+      } else {
+        document.getElementById('printDocSubtitle').innerText = "AUDITORÍA EJECUTIVA DE PLANTILLA • CONTROL SALARIAL Y EFICIENCIA DEPORTIVA";
+        document.getElementById('printAuditor').innerText = "Informe para Propiedad y Dirección General";
+      }
+
+      window.print();
+    }
+
+    // ==========================================
+    // OPERACIONES BÁSICAS: CREAR CLUB / CREAR JUGADOR / ELIMINAR
     // ==========================================
     async function guardarClubEnSupabase(e) {
       e.preventDefault();
       const btn = document.getElementById('btnSaveClub');
-      btn.innerText = "Guardando en Supabase...";
+      btn.innerText = "Guardando...";
       btn.disabled = true;
 
-      const nombre = document.getElementById('inputClubName').value;
-      const estructura = document.getElementById('inputClubStructure').value;
-      const categoria = document.getElementById('inputClubCategory').value;
-      const presupuesto = parseFloat(document.getElementById('inputClubBudget').value) || 0;
+      const payload = {
+        name: document.getElementById('inputClubName').value,
+        structure: document.getElementById('inputClubStructure').value,
+        category: document.getElementById('inputClubCategory').value,
+        total_budget: parseFloat(document.getElementById('inputClubBudget').value) || 0
+      };
 
       try {
         const { data: nuevoClub, error } = await supabaseClient
           .from('clubs')
-          .insert([{
-            name: nombre,
-            structure: estructura,
-            category: categoria,
-            total_budget: presupuesto
-          }])
+          .insert([payload])
           .select()
           .single();
 
@@ -1351,10 +1765,10 @@
         renderizarSelectorClubes();
         await cargarJugadoresYPartidosDelClubActivo();
         cerrarModal('clubModal');
-        alert(`¡Club "${nombre}" registrado con éxito en Supabase!`);
+        alert(`¡Club "${nuevoClub.name}" registrado con éxito!`);
       } catch (err) {
         console.error("Error guardando club:", err);
-        alert("Error al guardar en Supabase: " + err.message);
+        alert("Error al guardar club en Supabase: " + err.message);
       } finally {
         btn.innerText = "Crear Club en Supabase";
         btn.disabled = false;
@@ -1369,23 +1783,19 @@
       btn.innerText = "Guardando...";
       btn.disabled = true;
 
-      const nombre = document.getElementById('inputPlayerName').value;
-      const dorsal = parseInt(document.getElementById('inputPlayerDorsal').value) || 1;
-      const posicion = document.getElementById('inputPlayerPos').value;
-      const fee = parseFloat(document.getElementById('inputPlayerFee').value) || 0;
-      const status = document.getElementById('inputPlayerStatus').value;
+      const payload = {
+        club_id: clubActivo.id,
+        full_name: document.getElementById('inputPlayerName').value,
+        dorsal: parseInt(document.getElementById('inputPlayerDorsal').value) || 1,
+        position: document.getElementById('inputPlayerPos').value,
+        annual_salary: parseFloat(document.getElementById('inputPlayerFee').value) || 0,
+        fee_status: document.getElementById('inputPlayerStatus').value
+      };
 
       try {
         const { data: nuevoJugador, error } = await supabaseClient
           .from('players')
-          .insert([{
-            club_id: clubActivo.id,
-            full_name: nombre,
-            dorsal: dorsal,
-            position: posicion,
-            annual_salary: fee,
-            fee_status: status
-          }])
+          .insert([payload])
           .select()
           .single();
 
@@ -1395,59 +1805,12 @@
         actualizarVistasDashboard();
         actualizarSelectorJugadoresActa();
         cerrarModal('playerModal');
-        alert(`¡Jugador ${nombre} guardado en Supabase!`);
+        alert(`¡Jugador ${nuevoJugador.full_name} guardado con éxito!`);
       } catch (err) {
         console.error("Error guardando jugador:", err);
-        alert("Error al guardar en Supabase: " + err.message);
+        alert("Error al guardar jugador en Supabase: " + err.message);
       } finally {
         btn.innerText = "Guardar Ficha en Supabase";
-        btn.disabled = false;
-      }
-    }
-
-    async function guardarActaPartidoEnSupabase(e) {
-      e.preventDefault();
-      const playerId = document.getElementById('matchSelectPlayer').value;
-      if (!playerId) {
-        alert("Selecciona un jugador");
-        return;
-      }
-
-      const btn = document.getElementById('btnSaveMatch');
-      btn.innerText = "Guardando acta...";
-      btn.disabled = true;
-
-      const mins = parseInt(document.getElementById('matchMins').value) || 0;
-      const goles = parseInt(document.getElementById('matchGoals').value) || 0;
-      const asist = parseInt(document.getElementById('matchAssists').value) || 0;
-      const amarillas = parseInt(document.getElementById('matchYellows').value) || 0;
-      const rojas = parseInt(document.getElementById('matchReds').value) || 0;
-
-      try {
-        const { data: nuevaActa, error } = await supabaseClient
-          .from('match_performances')
-          .insert([{
-            player_id: playerId,
-            minutes_played: mins,
-            goals: goles,
-            assists: asist,
-            yellow_cards: amarillas,
-            red_cards: rojas
-          }])
-          .select()
-          .single();
-
-        if (error) throw error;
-
-        actasPartidos.push(nuevaActa);
-        actualizarVistasDashboard();
-        e.target.reset();
-        alert("¡Acta guardada permanentemente en Supabase!");
-      } catch (err) {
-        console.error("Error guardando acta:", err);
-        alert("Error al guardar en Supabase: " + err.message);
-      } finally {
-        btn.innerText = "+ Guardar en la Nube";
         btn.disabled = false;
       }
     }
