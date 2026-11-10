@@ -3,253 +3,700 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ESS Modesto - Panel Deportivo y Financiero</title>
+  <title>SportPlatform - Gestión Clubes y Jugadores</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Cliente oficial de Supabase -->
+  <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen p-6 font-sans">
-  <div class="max-w-6xl mx-auto space-y-6">
-    
-    <!-- Encabezado -->
-    <header class="flex flex-col md:flex-row md:items-center md:justify-between border-b border-slate-700 pb-4">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between">
+
+  <!-- BARRA DE NAVEGACIÓN -->
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50 px-4 lg:px-8 py-3.5 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-lg bg-emerald-500 text-slate-950 font-black flex items-center justify-center text-lg shadow-lg shadow-emerald-500/20">
+        SP
+      </div>
       <div>
-        <h1 class="text-2xl font-bold tracking-tight text-emerald-400">Panel Deportivo & Financiero</h1>
-        <p class="text-sm text-slate-400">Datos conectados a tu nube de Supabase</p>
+        <h1 class="font-bold text-white tracking-tight leading-tight text-base sm:text-lg">SportPlatform</h1>
+        <p class="text-[11px] text-slate-400">Hub Deportivo & Financiero Multiclub</p>
       </div>
-      <div class="mt-4 md:mt-0 flex items-center space-x-3">
-        <label class="text-xs text-slate-400 uppercase">Presupuesto Anual (€):</label>
-        <input id="clubBudget" type="number" value="120000" onchange="guardarPresupuesto()" 
-               class="bg-slate-800 border border-slate-600 rounded px-3 py-1 text-right text-emerald-400 font-semibold focus:outline-none focus:border-emerald-400">
-      </div>
-    </header>
+    </div>
 
-    <!-- Métricas Generales -->
-    <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-        <p class="text-xs text-slate-400 uppercase font-semibold">Gasto Total en Plantilla</p>
-        <p id="totalSalaries" class="text-2xl font-bold mt-1">0 €</p>
+    <!-- Indicador de Club Activo y Selector de Modo -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div id="activeClubBadge" class="hidden sm:flex items-center gap-2 bg-slate-800/80 border border-slate-700 px-3 py-1 rounded-full text-xs text-slate-300">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span id="activeClubNameTxt">Cargando club...</span>
       </div>
-      <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-        <p class="text-xs text-slate-400 uppercase font-semibold">% Masa Salarial</p>
-        <div class="flex items-center space-x-2 mt-1">
-          <p id="salaryPercentage" class="text-2xl font-bold">0%</p>
-          <span id="salaryBadge" class="text-xs px-2 py-0.5 rounded font-medium"></span>
+      
+      <button onclick="cambiarClubDialog()" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-1.5 rounded-lg transition font-medium">
+        ⇄ Cambiar / Registrar Club
+      </button>
+    </div>
+  </header>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <main class="max-w-7xl mx-auto w-full p-4 sm:p-6 space-y-6 flex-1">
+
+    <!-- VISTA 1: MODAL / PANTALLA DE BIENVENIDA Y REGISTRO (CLUB O JUGADOR) -->
+    <div id="registrationModal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl relative">
+        <button onclick="cerrarModalRegistro()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-sm">✕</button>
+
+        <div class="text-center space-y-1">
+          <h2 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Bienvenido a SportPlatform</h2>
+          <p class="text-xs sm:text-sm text-slate-400">Selecciona qué deseas registrar para comenzar</p>
         </div>
-      </div>
-      <div class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-        <p class="text-xs text-slate-400 uppercase font-semibold">Coste Medio por Minuto</p>
-        <p id="avgCostPerMinute" class="text-2xl font-bold mt-1 text-slate-300">0 €/min</p>
-      </div>
-    </section>
 
-    <!-- Formulario para Añadir Jugador -->
-    <section class="bg-slate-800/60 p-4 rounded-xl border border-slate-700">
-      <h2 class="text-sm font-semibold uppercase text-slate-300 mb-3">Registrar Jugador en la Base de Datos</h2>
-      <form id="playerForm" onsubmit="agregarJugador(event)" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
-        <input id="playerName" type="text" placeholder="Nombre completo" required class="bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm">
-        <select id="playerPosition" class="bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm">
-          <option>Portero</option>
-          <option>Defensa</option>
-          <option>Centrocampista</option>
-          <option>Delantero</option>
-        </select>
-        <input id="playerSalary" type="number" placeholder="Salario Anual (€)" required class="bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm">
-        <input id="playerMinutes" type="number" placeholder="Minutos jugados" required class="bg-slate-900 border border-slate-700 rounded px-3 py-1.5 text-sm">
-        <button id="submitBtn" type="submit" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded px-4 py-1.5 text-sm transition">
-          + Guardar Jugador
+        <!-- Pestañas: Club o Jugador -->
+        <div class="grid grid-cols-2 p-1 bg-slate-950 rounded-xl border border-slate-800 text-xs sm:text-sm font-semibold">
+          <button id="tabClubBtn" onclick="cambiarTabRegistro('club')" class="py-2 rounded-lg bg-emerald-500 text-slate-950 transition">
+            🏛️ Registrar Club
+          </button>
+          <button id="tabPlayerBtn" onclick="cambiarTabRegistro('player')" class="py-2 rounded-lg text-slate-400 hover:text-white transition">
+            ⚽ Inscribir Jugador
+          </button>
+        </div>
+
+        <!-- Formulario 1: Registrar Club -->
+        <form id="formRegisterClub" onsubmit="guardarNuevoClub(event)" class="space-y-4">
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">Nombre del Club o Escuela</label>
+            <input id="newClubName" type="text" placeholder="Ej. CD San Lorenzo" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Tipo de Estructura</label>
+              <select id="newClubType" onchange="adaptarCategorias()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                <option value="grassroots">Fútbol Base / Cantera</option>
+                <option value="pro">Club Profesional / Semipro</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Categoría Principal</label>
+              <select id="newClubCategory" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+                <!-- Se llena con JS -->
+              </select>
+            </div>
+          </div>
+
+          <div id="budgetWrapper">
+            <label id="budgetLabel" class="text-xs text-slate-400 block mb-1">Presupuesto Anual de la Temporada (€)</label>
+            <input id="newClubBudget" type="number" value="18000" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-emerald-400 font-semibold focus:outline-none focus:border-emerald-500">
+            <span id="budgetHint" class="text-[11px] text-slate-500 mt-1 block">Para fútbol base, suma estimada de material, inscripciones y costes de campo.</span>
+          </div>
+
+          <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-lg py-2.5 text-sm transition">
+            Crear Club y Acceder al Panel
+          </button>
+        </form>
+
+        <!-- Formulario 2: Inscribir Jugador en el Club Activo -->
+        <form id="formRegisterPlayerDirect" onsubmit="guardarJugadorDesdeModal(event)" class="hidden space-y-4">
+          <div class="p-3 bg-slate-950 rounded-lg border border-slate-800 text-xs text-slate-400 flex justify-between items-center">
+            <span>Inscribiendo en club actual:</span>
+            <span id="modalCurrentClubName" class="font-bold text-emerald-400">Cargando...</span>
+          </div>
+
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">Nombre Completo del Jugador</label>
+            <input id="modalPlayerName" type="text" placeholder="Ej. Pablo Martínez" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Dorsal</label>
+              <input id="modalPlayerDorsal" type="number" placeholder="Ej. 7" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+            </div>
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Posición</label>
+              <select id="modalPlayerPos" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white">
+                <option>Portero</option>
+                <option>Defensa</option>
+                <option>Centrocampista</option>
+                <option>Delantero</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="modalPlayerEconomyWrapper" class="grid grid-cols-2 gap-3">
+            <div>
+              <label id="modalEcoLabel" class="text-xs text-slate-400 block mb-1">Cuota Anual (€)</label>
+              <input id="modalPlayerFee" type="number" value="380" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-emerald-400 font-semibold focus:outline-none focus:border-emerald-500">
+            </div>
+            <div>
+              <label id="modalStatusLabel" class="text-xs text-slate-400 block mb-1">Estado de la Cuota</label>
+              <select id="modalPlayerStatus" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white">
+                <option value="paid">Pagada / Al día</option>
+                <option value="pending">Pendiente</option>
+                <option value="exempt">Beca / Exento</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" class="w-full bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold rounded-lg py-2.5 text-sm transition">
+            Completar Ficha e Inscribir
+          </button>
+        </form>
+
+      </div>
+    </div>
+
+    <!-- PANEL DEL CLUB ACTIVO (INTERFAZ DINÁMICA SEGÚN TIPO) -->
+    <div id="clubHeaderBanner" class="bg-gradient-to-r from-slate-900 via-slate-900/90 to-slate-800/80 p-5 rounded-2xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <span id="clubTypeBadge" class="text-xs font-bold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+            Fútbol Base
+          </span>
+          <span id="clubCategoryBadge" class="text-xs text-slate-400 font-medium">Cadete A</span>
+        </div>
+        <h2 id="currentClubTitle" class="text-2xl font-bold text-white mt-1">Nombre del Club</h2>
+        <p id="clubModeDescription" class="text-xs text-slate-400 mt-0.5">Adaptado al modelo formativo de cuotas y equidad de minutos.</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button onclick="abrirModalInscripcionJugador()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs sm:text-sm transition flex items-center gap-1.5 shadow-lg shadow-emerald-500/10">
+          <span>+</span> Inscribir Jugador
         </button>
-      </form>
+      </div>
+    </div>
+
+    <!-- KPI / TARJETAS RESUMEN (ADAPTABLES SEGÚN SEA PROFESIONAL O FÚTBOL BASE) -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+        <p id="kpi1Title" class="text-xs text-slate-400 uppercase font-semibold">Recaudación Cuotas</p>
+        <p id="kpi1Value" class="text-2xl font-bold mt-1 text-white">0 €</p>
+        <span id="kpi1Sub" class="text-[11px] text-slate-400">0% cubierto</span>
+      </div>
+      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+        <p id="kpi2Title" class="text-xs text-slate-400 uppercase font-semibold">Minutos Totales</p>
+        <p id="kpi2Value" class="text-2xl font-bold mt-1 text-sky-400">0 min</p>
+        <span id="kpi2Sub" class="text-[11px] text-slate-400">0 min de media</span>
+      </div>
+      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+        <p class="text-xs text-slate-400 uppercase font-semibold">Aporte Ofensivo (G+A)</p>
+        <p id="kpi3Value" class="text-2xl font-bold mt-1 text-emerald-400">0 / 0</p>
+        <span id="kpi3Sub" class="text-[11px] text-slate-400">Goles y asistencias</span>
+      </div>
+      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+        <p class="text-xs text-slate-400 uppercase font-semibold">Fair Play / Disciplina</p>
+        <p id="kpi4Value" class="text-2xl font-bold mt-1 text-amber-400">0 🟨 | 0 🟥</p>
+        <span id="kpi4Sub" class="text-[11px] text-slate-400">Control de sanciones</span>
+      </div>
     </section>
 
-    <!-- Tabla de Jugadores -->
-    <section class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
-      <div class="p-4 border-b border-slate-700 flex justify-between items-center">
-        <h2 class="font-semibold text-slate-200">Plantilla Registrada</h2>
-        <span id="loadingStatus" class="text-xs text-slate-400">Cargando datos...</span>
+    <!-- BLOQUE INTERACTIVO: REGISTRO DE ACTAS DE PARTIDO -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Formulario para volcar datos de partido -->
+      <section class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3 lg:col-span-1">
+        <h3 class="text-sm font-bold uppercase text-slate-300 flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-sky-400"></span> Acta de Partido / Rendimiento
+        </h3>
+        <p class="text-xs text-slate-400">Introduce las estadísticas cosechadas por cada jugador al terminar la jornada.</p>
+
+        <form id="matchLogForm" onsubmit="registrarEstadisticasPartido(event)" class="space-y-3 pt-2">
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">Seleccionar Jugador</label>
+            <select id="matchSelectPlayer" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-white focus:outline-none">
+              <option value="">-- Elige un jugador --</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Minutos</label>
+              <input id="matchMins" type="number" min="0" max="120" placeholder="45" required class="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white">
+            </div>
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Goles</label>
+              <input id="matchGoals" type="number" min="0" value="0" class="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2">
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Asistencias</label>
+              <input id="matchAssists" type="number" min="0" value="0" class="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white">
+            </div>
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Amarillas 🟨</label>
+              <input id="matchYellows" type="number" min="0" max="2" value="0" class="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white">
+            </div>
+            <div>
+              <label class="text-xs text-slate-400 block mb-1">Rojas 🟥</label>
+              <input id="matchReds" type="number" min="0" max="1" value="0" class="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white">
+            </div>
+          </div>
+
+          <button type="submit" class="w-full bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold rounded-lg py-2 text-xs sm:text-sm transition mt-1">
+            + Añadir al Expediente del Jugador
+          </button>
+        </form>
+      </section>
+
+      <!-- Semáforo de Diagnóstico Contextual -->
+      <section class="bg-slate-900 p-5 rounded-2xl border border-slate-800 lg:col-span-2 flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-3">
+            <h3 id="diagnosisHeader" class="text-sm font-bold uppercase text-slate-300 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-amber-400"></span> Diagnóstico Inteligente
+            </h3>
+            <span id="algorithmTypeTag" class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700">Módulo Formativo</span>
+          </div>
+
+          <p id="diagnosisDescription" class="text-xs text-slate-400 leading-relaxed">
+            Evaluando equidad en los minutos disputados por plantilla para evitar desmotivación y abandono deportivo en etapas formativas.
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+            <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+              <span id="metricDiagTitle1" class="text-xs text-slate-400 block">Minutos promedio esperados</span>
+              <span id="metricDiagVal1" class="text-lg font-bold text-white mt-0.5 block">0 min</span>
+            </div>
+            <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+              <span id="metricDiagTitle2" class="text-xs text-slate-400 block">Alerta de seguimiento</span>
+              <span id="metricDiagVal2" class="text-sm font-semibold text-emerald-400 mt-0.5 block">Plantilla equilibrada</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-500">
+          <span>Base de datos vinculada con Supabase</span>
+          <span id="syncIndicator">● En línea</span>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- TABLA MAESTRA DE JUGADORES / PLANTILLA -->
+    <section class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+      <div class="p-4 border-b border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+        <div>
+          <h3 class="font-bold text-white text-base">Plantilla Oficial & Rendimiento</h3>
+          <p class="text-xs text-slate-400">Listado consolidado de jugadores inscritos</p>
+        </div>
+        <span id="playerCounterBadge" class="text-xs bg-slate-800 px-3 py-1 rounded-full text-slate-300 border border-slate-700">
+          0 jugadores inscritos
+        </span>
       </div>
+
       <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm">
-          <thead class="bg-slate-900/60 text-slate-400 uppercase text-xs">
+        <table class="w-full text-left text-xs sm:text-sm">
+          <thead class="bg-slate-950 text-slate-400 uppercase text-[11px]">
             <tr>
+              <th class="p-3">#</th>
               <th class="p-3">Jugador</th>
               <th class="p-3">Posición</th>
-              <th class="p-3 text-right">Salario Anual</th>
-              <th class="p-3 text-right">Minutos Estimados</th>
-              <th class="p-3 text-right">Coste / Minuto</th>
-              <th class="p-3 text-center">Diagnóstico</th>
+              <th id="thEconomy" class="p-3 text-right">Cuota Anual</th>
+              <th class="p-3 text-right">Partidos</th>
+              <th class="p-3 text-right">Minutos</th>
+              <th class="p-3 text-right">Goles</th>
+              <th class="p-3 text-right">Asist.</th>
+              <th class="p-3 text-center">Tarjetas</th>
+              <th id="thDiagnosis" class="p-3 text-center">Diagnóstico</th>
               <th class="p-3 text-center">Acción</th>
             </tr>
           </thead>
-          <tbody id="playerTableBody" class="divide-y divide-slate-700"></tbody>
+          <tbody id="rosterTableBody" class="divide-y divide-slate-800 text-slate-300">
+            <!-- Rellenado dinámicamente -->
+          </tbody>
         </table>
       </div>
     </section>
 
-  </div>
+  </main>
+
+  <footer class="border-t border-slate-800 py-4 text-center text-xs text-slate-600">
+    SportPlatform MVP • Adaptable para Fútbol Profesional y Fútbol Base
+  </footer>
 
   <script>
-    // --- 1. CREDENCIALES DE SUPABASE ---
-    // Tu Project URL real identificada previamente: https://ouznpnpiuxonieduxrye.supabase.co
+    // --- CONFIGURACIÓN SUPABASE ---
     const SUPABASE_URL = "https://ouznpnpiuxonieduxrye.supabase.co";
-    // Tu Publishable key (sb_publishable_...)
     const SUPABASE_ANON_KEY = "sb_publishable_NPk9F0NmaVU9emfm-aJIUA_lU_1v-Ve";
-    
-    const DEFAULT_CLUB_ID = '11111111-1111-1111-1111-111111111111';
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let jugadoresLocales = [];
+    // CATEGORÍAS SEGÚN EL TIPO DE CLUB
+    const CATEGORIAS_BASE = ["Prebenjamín", "Benjamín", "Alevín", "Infantil", "Cadete", "Juvenil Cantera"];
+    const CATEGORIAS_PRO = ["1ª División", "2ª División", "1ª RFEF", "2ª RFEF", "3ª RFEF", "Regional Preferente"];
 
-    // Cargar datos al abrir la página
-    async function cargarDatos() {
-      document.getElementById('loadingStatus').innerText = "Sincronizando con Supabase...";
+    // ESTADO DE LA APLICACIÓN
+    let clubActivo = null;
+    let listaJugadores = [];
+
+    // Clubes iniciales si no existen en BD
+    let clubesGuardados = [
+      {
+        id: "club_grassroots_1",
+        name: "CD Cantera Olímpica",
+        structure: "grassroots", // 'grassroots' o 'pro'
+        category: "Cadete",
+        total_budget: 15000
+      },
+      {
+        id: "club_pro_2",
+        name: "Atlético Metropolitano CF",
+        structure: "pro",
+        category: "2ª RFEF",
+        total_budget: 350000
+      }
+    ];
+
+    // Jugadores de demostración para cantera
+    let jugadoresGrassrootsDemo = [
+      { id: "p1", dorsal: 10, full_name: "Mateo Valdés", position: "Centrocampista", economy_val: 380, status: "paid", matches: 7, minutes: 340, goals: 4, assists: 6, yellows: 1, reds: 0 },
+      { id: "p2", dorsal: 9, full_name: "Álvaro Ruiz", position: "Delantero", economy_val: 380, status: "paid", matches: 7, minutes: 350, goals: 8, assists: 2, yellows: 0, reds: 0 },
+      { id: "p3", dorsal: 4, full_name: "Darío Gil", position: "Defensa", economy_val: 380, status: "pending", matches: 6, minutes: 300, goals: 1, assists: 0, yellows: 2, reds: 0 },
+      { id: "p4", dorsal: 1, full_name: "Pablo Soria", position: "Portero", economy_val: 380, status: "paid", matches: 7, minutes: 350, goals: 0, assists: 0, yellows: 0, reds: 0 },
+      { id: "p5", dorsal: 14, full_name: "Lucas Méndez", position: "Delantero", economy_val: 380, status: "exempt", matches: 3, minutes: 80, goals: 0, assists: 0, yellows: 0, reds: 0 }
+    ];
+
+    // Jugadores de demostración para profesional
+    let jugadoresProDemo = [
+      { id: "pro1", dorsal: 9, full_name: "Marcos Asensio G.", position: "Delantero", economy_val: 45000, status: "contract", matches: 12, minutes: 980, goals: 9, assists: 4, yellows: 2, reds: 0 },
+      { id: "pro2", dorsal: 5, full_name: "Carlos Barroso", position: "Defensa", economy_val: 32000, status: "contract", matches: 12, minutes: 1080, goals: 2, assists: 1, yellows: 4, reds: 1 },
+      { id: "pro3", dorsal: 8, full_name: "Javier Serrano", position: "Centrocampista", economy_val: 60000, status: "contract", matches: 6, minutes: 240, goals: 0, assists: 1, yellows: 1, reds: 0 }
+    ];
+
+    // INICIALIZACIÓN
+    window.addEventListener('DOMContentLoaded', () => {
+      adaptarCategorias();
+      seleccionarClub(clubesGuardados[0]);
+    });
+
+    // Cambiar lista desplegable de categorías según tipo de club seleccionado
+    function adaptarCategorias() {
+      const tipo = document.getElementById('newClubType').value;
+      const selectCat = document.getElementById('newClubCategory');
+      const budgetHint = document.getElementById('budgetHint');
+      const budgetLabel = document.getElementById('budgetLabel');
       
-      try {
-        // Cargar presupuesto del club
-        const { data: club, error: errClub } = await supabaseClient
-          .from('clubs')
-          .select('total_budget')
-          .eq('id', DEFAULT_CLUB_ID)
-          .maybeSingle();
-          
-        if (club && club.total_budget) {
-          document.getElementById('clubBudget').value = club.total_budget;
-        }
+      selectCat.innerHTML = "";
+      const lista = tipo === 'grassroots' ? CATEGORIAS_BASE : CATEGORIAS_PRO;
+      lista.forEach(cat => {
+        selectCat.innerHTML += `<option value="${cat}">${cat}</option>`;
+      });
 
-        // Cargar jugadores
-        const { data: players, error: errPlayers } = await supabaseClient
-          .from('players')
-          .select('*')
-          .eq('club_id', DEFAULT_CLUB_ID);
-
-        if (errPlayers) {
-          console.error("Error cargando jugadores:", errPlayers);
-          document.getElementById('loadingStatus').innerText = "Error: " + errPlayers.message;
-          return;
-        }
-
-        jugadoresLocales = players || [];
-        document.getElementById('loadingStatus').innerText = `${jugadoresLocales.length} jugadores cargados`;
-        renderizarVista();
-      } catch (e) {
-        console.error("Excepción al conectar:", e);
-        document.getElementById('loadingStatus').innerText = "Error de conexión con Supabase.";
+      if (tipo === 'grassroots') {
+        budgetLabel.innerText = "Presupuesto Anual del Equipo / Escuela (€)";
+        budgetHint.innerText = "Coste operativo anual (equipaciones, inscripciones federativas, campos).";
+        document.getElementById('newClubBudget').value = 15000;
+      } else {
+        budgetLabel.innerText = "Límite / Masa Salarial de Plantilla (€)";
+        budgetHint.innerText = "Monto total destinado a salarios del primer equipo (Fair Play Financiero).";
+        document.getElementById('newClubBudget').value = 350000;
       }
     }
 
-    function renderizarVista() {
-      const budget = parseFloat(document.getElementById('clubBudget').value) || 1;
-      const totalSalarios = jugadoresLocales.reduce((acc, j) => acc + Number(j.annual_salary), 0);
-      const totalMinutos = jugadoresLocales.reduce((acc, j) => acc + (j.temp_minutes || 900), 0);
+    // Seleccionar o cambiar el Club en uso
+    function seleccionarClub(club) {
+      clubActivo = club;
+      document.getElementById('activeClubNameTxt').innerText = `${club.name} (${club.category})`;
+      document.getElementById('currentClubTitle').innerText = club.name;
+      document.getElementById('clubCategoryBadge').innerText = club.category;
       
-      const pctPresupuesto = (totalSalarios / budget) * 100;
-      
-      document.getElementById('totalSalaries').innerText = totalSalarios.toLocaleString('es-ES') + " €";
-      document.getElementById('salaryPercentage').innerText = pctPresupuesto.toFixed(1) + "%";
-      
-      const badge = document.getElementById('salaryBadge');
-      if (pctPresupuesto <= 60) {
-        badge.innerText = "Saludable (<60%)";
-        badge.className = "text-xs px-2 py-0.5 rounded font-medium bg-emerald-900/80 text-emerald-300 border border-emerald-700";
-      } else if (pctPresupuesto <= 70) {
-        badge.innerText = "Precaución (60-70%)";
-        badge.className = "text-xs px-2 py-0.5 rounded font-medium bg-yellow-900/80 text-yellow-300 border border-yellow-700";
+      const badge = document.getElementById('clubTypeBadge');
+      const desc = document.getElementById('clubModeDescription');
+      const algoTag = document.getElementById('algorithmTypeTag');
+
+      if (club.structure === 'grassroots') {
+        badge.innerText = "Fútbol Base / Cantera";
+        badge.className = "text-xs font-bold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+        desc.innerText = "Panel formativo: optimizado para seguimiento de cuotas, reparto de minutos y juego limpio.";
+        algoTag.innerText = "Módulo Formativo (Equidad)";
+        document.getElementById('thEconomy').innerText = "Cuota Anual";
+        document.getElementById('kpi1Title').innerText = "Recaudación Cuotas";
+        listaJugadores = jugadoresGrassrootsDemo;
       } else {
-        badge.innerText = "Riesgo (>70%)";
-        badge.className = "text-xs px-2 py-0.5 rounded font-medium bg-red-900/80 text-red-300 border border-red-700";
+        badge.innerText = "Club Profesional";
+        badge.className = "text-xs font-bold uppercase px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30";
+        desc.innerText = "Panel profesional: optimizado para control de masa salarial, coste por minuto útil y rendimiento.";
+        algoTag.innerText = "Módulo Financiero (Rentabilidad)";
+        document.getElementById('thEconomy').innerText = "Salario Anual";
+        document.getElementById('kpi1Title').innerText = "Gasto Masa Salarial";
+        listaJugadores = jugadoresProDemo;
       }
 
-      const mediaCosteMinuto = totalMinutos > 0 ? (totalSalarios / totalMinutos) : 0;
-      document.getElementById('avgCostPerMinute').innerText = mediaCosteMinuto.toFixed(2) + " €/min";
+      actualizarSelectJugadoresPartido();
+      actualizarVistasDashboard();
+      cerrarModalRegistro();
+    }
 
-      const tbody = document.getElementById('playerTableBody');
-      tbody.innerHTML = "";
+    // Actualizar select de actas de partido
+    function actualizarSelectJugadoresPartido() {
+      const select = document.getElementById('matchSelectPlayer');
+      select.innerHTML = '<option value="">-- Elige un jugador --</option>';
+      listaJugadores.forEach(j => {
+        select.innerHTML += `<option value="${j.id}">#${j.dorsal} - ${j.full_name} (${j.position})</option>`;
+      });
+    }
 
-      jugadoresLocales.forEach((j) => {
-        const mins = j.temp_minutes || 900;
-        const costeMin = mins > 0 ? (Number(j.annual_salary) / mins) : Number(j.annual_salary);
-        let estadoBadge = '';
+    // Calcular KPIs y Rellenar Tabla según el tipo de club
+    function actualizarVistasDashboard() {
+      const isBase = clubActivo.structure === 'grassroots';
+      const budget = clubActivo.total_budget || 1;
 
-        if (costeMin > 35) {
-          estadoBadge = '<span class="px-2 py-0.5 text-xs rounded bg-red-900/40 text-red-400 border border-red-800">Sobrecoste</span>';
-        } else if (costeMin > 15) {
-          estadoBadge = '<span class="px-2 py-0.5 text-xs rounded bg-yellow-900/40 text-yellow-400 border border-yellow-800">Equilibrado</span>';
+      const totalEconomico = listaJugadores.reduce((acc, j) => {
+        if (isBase) {
+          return j.status === 'paid' ? acc + Number(j.economy_val) : acc;
         } else {
-          estadoBadge = '<span class="px-2 py-0.5 text-xs rounded bg-emerald-900/40 text-emerald-400 border border-emerald-800">Eficiente</span>';
+          return acc + Number(j.economy_val);
+        }
+      }, 0);
+
+      const totalMins = listaJugadores.reduce((acc, j) => acc + Number(j.minutes), 0);
+      const totalGoles = listaJugadores.reduce((acc, j) => acc + Number(j.goals), 0);
+      const totalAsist = listaJugadores.reduce((acc, j) => acc + Number(j.assists), 0);
+      const totalAmarillas = listaJugadores.reduce((acc, j) => acc + Number(j.yellows), 0);
+      const totalRojas = listaJugadores.reduce((acc, j) => acc + Number(j.reds), 0);
+
+      // KPI 1 (Económico)
+      document.getElementById('kpi1Value').innerText = totalEconomico.toLocaleString('es-ES') + " €";
+      const pctCobro = ((totalEconomico / budget) * 100).toFixed(0);
+      document.getElementById('kpi1Sub').innerText = isBase 
+        ? `${pctCobro}% del presupuesto anual cubierto`
+        : `${pctCobro}% del límite salarial consumido`;
+
+      // KPI 2 (Minutos)
+      document.getElementById('kpi2Value').innerText = `${totalMins} min`;
+      const mediaMins = listaJugadores.length > 0 ? Math.round(totalMins / listaJugadores.length) : 0;
+      document.getElementById('kpi2Sub').innerText = `${mediaMins} min de media por jugador`;
+
+      // KPI 3 (Ofensivo)
+      document.getElementById('kpi3Value').innerText = `${totalGoles} / ${totalAsist}`;
+      document.getElementById('kpi3Sub').innerText = `${totalGoles + totalAsist} acciones de gol directas`;
+
+      // KPI 4 (Fair Play)
+      document.getElementById('kpi4Value').innerText = `${totalAmarillas} 🟨 | ${totalRojas} 🟥`;
+      document.getElementById('kpi4Sub').innerText = `${(totalAmarillas / (listaJugadores.length || 1)).toFixed(1)} tarjetas/jugador`;
+
+      // Sección de Diagnóstico Contextual
+      if (isBase) {
+        document.getElementById('diagnosisHeader').innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400"></span> Índice de Equidad Formativa';
+        document.getElementById('diagnosisDescription').innerText = 'Detección automática de canteranos con baja participación para asegurar un aprendizaje continuo y equilibrado.';
+        document.getElementById('metricDiagTitle1').innerText = "Minutos recomendados por jugador";
+        document.getElementById('metricDiagVal1').innerText = `${mediaMins} min`;
+
+        const descolgados = listaJugadores.filter(j => j.minutes < (mediaMins * 0.45));
+        const val2 = document.getElementById('metricDiagVal2');
+        if (descolgados.length > 0) {
+          val2.innerText = `⚠️ ${descolgados.length} jugador(es) con muy pocos minutos`;
+          val2.className = "text-sm font-semibold text-amber-400 mt-0.5 block";
+        } else {
+          val2.innerText = `✅ Reparto de minutos correcto`;
+          val2.className = "text-sm font-semibold text-emerald-400 mt-0.5 block";
+        }
+      } else {
+        document.getElementById('diagnosisHeader').innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Eficiencia Financiera de Plantilla';
+        document.getElementById('diagnosisDescription').innerText = 'Auditoría continua de coste por minuto efectivo y rendimiento para prevenir sobrecostes salariales en la masa del club.';
+        document.getElementById('metricDiagTitle1').innerText = "Coste Medio de Plantilla por Minuto";
+        const costeMinMedio = totalMins > 0 ? (totalEconomico / totalMins) : 0;
+        document.getElementById('metricDiagVal1').innerText = `${costeMinMedio.toFixed(2)} €/min`;
+
+        const val2 = document.getElementById('metricDiagVal2');
+        if (pctCobro > 70) {
+          val2.innerText = `🚨 Límite salarial en riesgo (>70%)`;
+          val2.className = "text-sm font-semibold text-rose-400 mt-0.5 block";
+        } else {
+          val2.innerText = `✅ Masa salarial dentro de norma`;
+          val2.className = "text-sm font-semibold text-emerald-400 mt-0.5 block";
+        }
+      }
+
+      // Rellenar Tabla
+      const tbody = document.getElementById('rosterTableBody');
+      tbody.innerHTML = "";
+      document.getElementById('playerCounterBadge').innerText = `${listaJugadores.length} jugadores inscritos`;
+
+      listaJugadores.forEach((j, index) => {
+        let badgeEconomico = '';
+        let badgeDiag = '';
+
+        if (isBase) {
+          // Badges fútbol base
+          if (j.status === 'paid') badgeEconomico = `<span class="text-emerald-400 font-semibold">${j.economy_val}€ (Pagado)</span>`;
+          else if (j.status === 'pending') badgeEconomico = `<span class="text-amber-400 font-semibold">${j.economy_val}€ (Pendiente)</span>`;
+          else badgeEconomico = `<span class="text-slate-400">Beca</span>`;
+
+          if (j.minutes < (mediaMins * 0.45) && mediaMins > 0) {
+            badgeDiag = '<span class="px-2 py-0.5 text-[11px] rounded bg-amber-900/40 text-amber-300 border border-amber-800">Dar Minutos</span>';
+          } else {
+            badgeDiag = '<span class="px-2 py-0.5 text-[11px] rounded bg-emerald-900/40 text-emerald-300 border border-emerald-800">Adecuado</span>';
+          }
+        } else {
+          // Badges fútbol profesional
+          badgeEconomico = `<span class="text-slate-200 font-semibold">${Number(j.economy_val).toLocaleString('es-ES')} €</span>`;
+          const costeMin = j.minutes > 0 ? (j.economy_val / j.minutes) : j.economy_val;
+          if (costeMin > 45) {
+            badgeDiag = '<span class="px-2 py-0.5 text-[11px] rounded bg-rose-900/40 text-rose-300 border border-rose-800">Sobrecoste</span>';
+          } else {
+            badgeDiag = '<span class="px-2 py-0.5 text-[11px] rounded bg-emerald-900/40 text-emerald-300 border border-emerald-800">Rentable</span>';
+          }
         }
 
         tbody.innerHTML += `
-          <tr class="hover:bg-slate-700/40">
-            <td class="p-3 font-medium text-slate-200">${j.full_name}</td>
+          <tr class="hover:bg-slate-800/40 transition">
+            <td class="p-3 font-bold text-slate-400">#${j.dorsal}</td>
+            <td class="p-3 font-semibold text-white">${j.full_name}</td>
             <td class="p-3 text-slate-400">${j.position}</td>
-            <td class="p-3 text-right">${Number(j.annual_salary).toLocaleString('es-ES')} €</td>
-            <td class="p-3 text-right">${mins} min</td>
-            <td class="p-3 text-right font-semibold text-slate-200">${costeMin.toFixed(2)} €/min</td>
-            <td class="p-3 text-center">${estadoBadge}</td>
+            <td class="p-3 text-right">${badgeEconomico}</td>
+            <td class="p-3 text-right text-slate-300">${j.matches}</td>
+            <td class="p-3 text-right font-semibold text-sky-400">${j.minutes}'</td>
+            <td class="p-3 text-right font-bold text-emerald-400">${j.goals}</td>
+            <td class="p-3 text-right text-slate-300">${j.assists}</td>
+            <td class="p-3 text-center text-xs">
+              <span class="text-amber-400 font-semibold">${j.yellows}🟨</span>
+              <span class="text-rose-500 font-semibold ml-1">${j.reds}🟥</span>
+            </td>
+            <td class="p-3 text-center">${badgeDiag}</td>
             <td class="p-3 text-center">
-              <button onclick="eliminarJugador('${j.id}')" class="text-xs text-rose-400 hover:text-rose-300">Eliminar</button>
+              <button onclick="eliminarJugador(${index})" class="text-rose-400 hover:text-rose-300 text-xs">Eliminar</button>
             </td>
           </tr>
         `;
       });
     }
 
-    async function agregarJugador(e) {
+    // REGISTRAR ACTA DE PARTIDO (MINUTOS, GOLES, TARJETAS)
+    function registrarEstadisticasPartido(e) {
       e.preventDefault();
-      const nombre = document.getElementById('playerName').value;
-      const posicion = document.getElementById('playerPosition').value;
-      const salario = parseFloat(document.getElementById('playerSalary').value) || 0;
-      const minutos = parseInt(document.getElementById('playerMinutes').value) || 900;
-
-      const { data, error } = await supabaseClient
-        .from('players')
-        .insert([{
-          club_id: DEFAULT_CLUB_ID,
-          full_name: nombre,
-          position: posicion,
-          annual_salary: salario
-        }])
-        .select();
-
-      if (error) {
-        alert("Error al guardar: " + error.message);
+      const playerId = document.getElementById('matchSelectPlayer').value;
+      if (!playerId) {
+        alert("Selecciona un jugador");
         return;
       }
 
-      if (data && data.length > 0) {
-        data[0].temp_minutes = minutos;
-        jugadoresLocales.push(data[0]);
+      const mins = parseInt(document.getElementById('matchMins').value) || 0;
+      const goles = parseInt(document.getElementById('matchGoals').value) || 0;
+      const asist = parseInt(document.getElementById('matchAssists').value) || 0;
+      const amarillas = parseInt(document.getElementById('matchYellows').value) || 0;
+      const rojas = parseInt(document.getElementById('matchReds').value) || 0;
+
+      const player = listaJugadores.find(j => j.id == playerId);
+      if (player) {
+        player.matches += 1;
+        player.minutes += mins;
+        player.goals += goles;
+        player.assists += asist;
+        player.yellows += amarillas;
+        player.reds += rojas;
+
+        document.getElementById('matchLogForm').reset();
+        actualizarVistasDashboard();
+        alert(`Estadísticas añadidas al expediente de ${player.full_name}`);
       }
-      document.getElementById('playerForm').reset();
-      renderizarVista();
     }
 
-    async function eliminarJugador(id) {
-      const { error } = await supabaseClient
-        .from('players')
-        .delete()
-        .eq('id', id);
+    // GESTIÓN DE MODALES Y FORMULARIOS
+    function cambiarClubDialog() {
+      document.getElementById('registrationModal').classList.remove('hidden');
+      cambiarTabRegistro('club');
+    }
 
-      if (error) {
-        alert("Error al eliminar: " + error.message);
-        return;
+    function abrirModalInscripcionJugador() {
+      document.getElementById('modalCurrentClubName').innerText = clubActivo.name;
+      const isBase = clubActivo.structure === 'grassroots';
+      document.getElementById('modalEcoLabel').innerText = isBase ? "Cuota Anual (€)" : "Salario Anual (€)";
+      document.getElementById('modalPlayerFee').value = isBase ? 380 : 35000;
+      document.getElementById('modalStatusLabel').innerText = isBase ? "Estado de Cuota" : "Estado Contrato";
+
+      const selectStatus = document.getElementById('modalPlayerStatus');
+      selectStatus.innerHTML = isBase 
+        ? '<option value="paid">Pagada / Al día</option><option value="pending">Pendiente</option><option value="exempt">Beca / Exento</option>'
+        : '<option value="contract">Contrato en Vigor</option><option value="cedido">Cedido</option>';
+
+      document.getElementById('registrationModal').classList.remove('hidden');
+      cambiarTabRegistro('player');
+    }
+
+    function cerrarModalRegistro() {
+      document.getElementById('registrationModal').classList.add('hidden');
+    }
+
+    function cambiarTabRegistro(tab) {
+      const formClub = document.getElementById('formRegisterClub');
+      const formPlayer = document.getElementById('formRegisterPlayerDirect');
+      const btnClub = document.getElementById('tabClubBtn');
+      const btnPlayer = document.getElementById('tabPlayerBtn');
+
+      if (tab === 'club') {
+        formClub.classList.remove('hidden');
+        formPlayer.classList.add('hidden');
+        btnClub.className = "py-2 rounded-lg bg-emerald-500 text-slate-950 transition font-bold";
+        btnPlayer.className = "py-2 rounded-lg text-slate-400 hover:text-white transition";
+      } else {
+        formClub.classList.add('hidden');
+        formPlayer.classList.remove('hidden');
+        btnPlayer.className = "py-2 rounded-lg bg-sky-500 text-slate-950 transition font-bold";
+        btnClub.className = "py-2 rounded-lg text-slate-400 hover:text-white transition";
       }
-
-      jugadoresLocales = jugadoresLocales.filter(j => j.id !== id);
-      renderizarVista();
     }
 
-    async function guardarPresupuesto() {
-      const nuevoPresupuesto = parseFloat(document.getElementById('clubBudget').value) || 0;
-      await supabaseClient
-        .from('clubs')
-        .update({ total_budget: nuevoPresupuesto })
-        .eq('id', DEFAULT_CLUB_ID);
-      renderizarVista();
+    // GUARDAR NUEVO CLUB
+    function guardarNuevoClub(e) {
+      e.preventDefault();
+      const nombre = document.getElementById('newClubName').value;
+      const tipo = document.getElementById('newClubType').value;
+      const categoria = document.getElementById('newClubCategory').value;
+      const presupuesto = parseFloat(document.getElementById('newClubBudget').value) || 0;
+
+      const nuevoClub = {
+        id: "club_" + Date.now(),
+        name: nombre,
+        structure: tipo,
+        category: categoria,
+        total_budget: presupuesto
+      };
+
+      clubesGuardados.push(nuevoClub);
+      seleccionarClub(nuevoClub);
+      document.getElementById('formRegisterClub').reset();
+      alert(`¡Club "${nombre}" registrado con éxito!`);
     }
 
-    cargarDatos();
+    // GUARDAR NUEVO JUGADOR DESDE MODAL
+    function guardarJugadorDesdeModal(e) {
+      e.preventDefault();
+      const nombre = document.getElementById('modalPlayerName').value;
+      const dorsal = parseInt(document.getElementById('modalPlayerDorsal').value) || (listaJugadores.length + 1);
+      const posicion = document.getElementById('modalPlayerPos').value;
+      const ecoVal = parseFloat(document.getElementById('modalPlayerFee').value) || 0;
+      const status = document.getElementById('modalPlayerStatus').value;
+
+      const nuevoJugador = {
+        id: "p_" + Date.now(),
+        dorsal: dorsal,
+        full_name: nombre,
+        position: posicion,
+        economy_val: ecoVal,
+        status: status,
+        matches: 0,
+        minutes: 0,
+        goals: 0,
+        assists: 0,
+        yellows: 0,
+        reds: 0
+      };
+
+      listaJugadores.push(nuevoJugador);
+      document.getElementById('formRegisterPlayerDirect').reset();
+      cerrarModalRegistro();
+      actualizarSelectJugadoresPartido();
+      actualizarVistasDashboard();
+      alert(`¡Jugador ${nombre} inscrito en ${clubActivo.name}!`);
+    }
+
+    function eliminarJugador(index) {
+      if (confirm(`¿Eliminar al jugador ${listaJugadores[index].full_name}?`)) {
+        listaJugadores.splice(index, 1);
+        actualizarSelectJugadoresPartido();
+        actualizarVistasDashboard();
+      }
+    }
   </script>
 </body>
 </html>
