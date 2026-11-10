@@ -1,37 +1,72 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SportPlatform - Gestión Clubes y Jugadores</title>
+  <title>SportPlatform - Hub Deportivo & Financiero</title>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              500: '#10b981',
+              600: '#059669',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Chart.js para gráficos atractivos e interactivos -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col justify-between transition-colors duration-200">
 
-  <!-- BARRA DE NAVEGACIÓN -->
-  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50 px-4 lg:px-8 py-3.5 flex items-center justify-between">
+  <!-- BARRA DE NAVEGACIÓN (SE OCULTA EN LA IMPRESIÓN/PDF) -->
+  <header class="no-print border-b border-slate-800 dark:border-slate-800 light:border-slate-200 bg-slate-900/90 dark:bg-slate-900/90 backdrop-blur sticky top-0 z-40 px-4 lg:px-8 py-3 flex items-center justify-between transition-colors">
     <div class="flex items-center gap-3">
-      <div class="w-9 h-9 rounded-lg bg-emerald-500 text-slate-950 font-black flex items-center justify-center text-lg shadow-lg shadow-emerald-500/20">
+      <div class="w-9 h-9 rounded-xl bg-emerald-500 text-slate-950 font-black flex items-center justify-center text-lg shadow-lg shadow-emerald-500/20">
         SP
       </div>
       <div>
-        <h1 class="font-bold text-white tracking-tight leading-tight text-base sm:text-lg">SportPlatform</h1>
-        <p class="text-[11px] text-slate-400">Hub Deportivo & Financiero Multiclub</p>
+        <h1 class="font-bold tracking-tight text-base sm:text-lg leading-tight header-title">SportPlatform</h1>
+        <p class="text-[11px] header-sub">Hub Deportivo & Financiero Multi-Club</p>
       </div>
     </div>
 
-    <!-- Indicador de Club Activo y Selector de Modo -->
+    <!-- Indicador de Club Activo, Botón Informe PDF y Selector de Tema -->
     <div class="flex items-center gap-2 sm:gap-3">
-      <div id="activeClubBadge" class="hidden sm:flex items-center gap-2 bg-slate-800/80 border border-slate-700 px-3 py-1 rounded-full text-xs text-slate-300">
+      <!-- Selector de Club -->
+      <div class="flex items-center gap-2 bg-slate-800/80 dark:bg-slate-800/80 club-badge-box border border-slate-700 px-3 py-1.5 rounded-full text-xs">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span id="activeClubNameTxt">Cargando club...</span>
+        <select id="clubSelectorDropdown" onchange="cambiarClubSeleccionado(this.value)" class="bg-transparent text-xs font-semibold focus:outline-none cursor-pointer">
+          <option value="">Cargando clubes...</option>
+        </select>
       </div>
-      
-      <button onclick="cambiarClubDialog()" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-1.5 rounded-lg transition font-medium">
-        ⇄ Cambiar / Registrar Club
+
+      <!-- Botón Exportar Informe Ejecutivo (PDF / Imprimir) -->
+      <button onclick="generarInformeEjecutivoPDF()" title="Descargar balance formal en PDF o imprimir" class="text-xs bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold px-3 py-1.5 rounded-lg transition shadow-sm flex items-center gap-1.5">
+        <span>📄</span>
+        <span class="hidden md:inline">Informe Ejecutivo PDF</span>
+        <span class="md:hidden">PDF</span>
+      </button>
+
+      <!-- Botón Nuevo Club -->
+      <button onclick="abrirModalNuevoClub()" class="text-xs bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-3 py-1.5 rounded-lg transition shadow-sm">
+        + Club
+      </button>
+
+      <!-- Toggle Tema (Blanco / Slate Oscuro) -->
+      <button onclick="toggleTheme()" id="themeToggleBtn" title="Cambiar tema de color" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:text-white transition flex items-center gap-1.5 text-xs font-medium">
+        <span id="themeIcon">☀️</span>
+        <span id="themeText" class="hidden sm:inline">Modo Claro</span>
       </button>
     </div>
   </header>
@@ -39,257 +74,210 @@
   <!-- CONTENEDOR PRINCIPAL -->
   <main class="max-w-7xl mx-auto w-full p-4 sm:p-6 space-y-6 flex-1">
 
-    <!-- VISTA 1: MODAL / PANTALLA DE BIENVENIDA Y REGISTRO (CLUB O JUGADOR) -->
-    <div id="registrationModal" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xl w-full p-6 sm:p-8 space-y-6 shadow-2xl relative">
-        <button onclick="cerrarModalRegistro()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-sm">✕</button>
-
-        <div class="text-center space-y-1">
-          <h2 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Bienvenido a SportPlatform</h2>
-          <p class="text-xs sm:text-sm text-slate-400">Selecciona qué deseas registrar para comenzar</p>
+    <!-- CABECERA FORMAL PARA LA IMPRESIÓN/PDF (SOLO VISIBLE EN PRINT) -->
+    <div class="print-only border-b-2 border-slate-900 pb-4 mb-4">
+      <div class="flex justify-between items-start">
+        <div>
+          <h1 id="printClubTitle" class="text-2xl font-black uppercase text-slate-900">NOMBRE DEL CLUB</h1>
+          <p id="printDocSubtitle" class="text-xs text-slate-600 font-semibold mt-0.5">INFORME EJECUTIVO DE BALANCE TEMPORADA</p>
         </div>
-
-        <!-- Pestañas: Club o Jugador -->
-        <div class="grid grid-cols-2 p-1 bg-slate-950 rounded-xl border border-slate-800 text-xs sm:text-sm font-semibold">
-          <button id="tabClubBtn" onclick="cambiarTabRegistro('club')" class="py-2 rounded-lg bg-emerald-500 text-slate-950 transition">
-            🏛️ Registrar Club
-          </button>
-          <button id="tabPlayerBtn" onclick="cambiarTabRegistro('player')" class="py-2 rounded-lg text-slate-400 hover:text-white transition">
-            ⚽ Inscribir Jugador
-          </button>
+        <div class="text-right text-xs text-slate-500">
+          <p><strong>Fecha emisión:</strong> <span id="printDate">--/--/----</span></p>
+          <p id="printAuditor">Auditoría Deportiva & Financiera</p>
         </div>
-
-        <!-- Formulario 1: Registrar Club -->
-        <form id="formRegisterClub" onsubmit="guardarNuevoClub(event)" class="space-y-4">
-          <div>
-            <label class="text-xs text-slate-400 block mb-1">Nombre del Club o Escuela</label>
-            <input id="newClubName" type="text" placeholder="Ej. CD San Lorenzo" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="text-xs text-slate-400 block mb-1">Tipo de Estructura</label>
-              <select id="newClubType" onchange="adaptarCategorias()" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-                <option value="grassroots">Fútbol Base / Cantera</option>
-                <option value="pro">Club Profesional / Semipro</option>
-              </select>
-            </div>
-            <div>
-              <label class="text-xs text-slate-400 block mb-1">Categoría Principal</label>
-              <select id="newClubCategory" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-                <!-- Se llena con JS -->
-              </select>
-            </div>
-          </div>
-
-          <div id="budgetWrapper">
-            <label id="budgetLabel" class="text-xs text-slate-400 block mb-1">Presupuesto Anual de la Temporada (€)</label>
-            <input id="newClubBudget" type="number" value="18000" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-emerald-400 font-semibold focus:outline-none focus:border-emerald-500">
-            <span id="budgetHint" class="text-[11px] text-slate-500 mt-1 block">Para fútbol base, suma estimada de material, inscripciones y costes de campo.</span>
-          </div>
-
-          <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-lg py-2.5 text-sm transition">
-            Crear Club y Acceder al Panel
-          </button>
-        </form>
-
-        <!-- Formulario 2: Inscribir Jugador en el Club Activo -->
-        <form id="formRegisterPlayerDirect" onsubmit="guardarJugadorDesdeModal(event)" class="hidden space-y-4">
-          <div class="p-3 bg-slate-950 rounded-lg border border-slate-800 text-xs text-slate-400 flex justify-between items-center">
-            <span>Inscribiendo en club actual:</span>
-            <span id="modalCurrentClubName" class="font-bold text-emerald-400">Cargando...</span>
-          </div>
-
-          <div>
-            <label class="text-xs text-slate-400 block mb-1">Nombre Completo del Jugador</label>
-            <input id="modalPlayerName" type="text" placeholder="Ej. Pablo Martínez" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="text-xs text-slate-400 block mb-1">Dorsal</label>
-              <input id="modalPlayerDorsal" type="number" placeholder="Ej. 7" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500">
-            </div>
-            <div>
-              <label class="text-xs text-slate-400 block mb-1">Posición</label>
-              <select id="modalPlayerPos" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white">
-                <option>Portero</option>
-                <option>Defensa</option>
-                <option>Centrocampista</option>
-                <option>Delantero</option>
-              </select>
-            </div>
-          </div>
-
-          <div id="modalPlayerEconomyWrapper" class="grid grid-cols-2 gap-3">
-            <div>
-              <label id="modalEcoLabel" class="text-xs text-slate-400 block mb-1">Cuota Anual (€)</label>
-              <input id="modalPlayerFee" type="number" value="380" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-emerald-400 font-semibold focus:outline-none focus:border-emerald-500">
-            </div>
-            <div>
-              <label id="modalStatusLabel" class="text-xs text-slate-400 block mb-1">Estado de la Cuota</label>
-              <select id="modalPlayerStatus" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white">
-                <option value="paid">Pagada / Al día</option>
-                <option value="pending">Pendiente</option>
-                <option value="exempt">Beca / Exento</option>
-              </select>
-            </div>
-          </div>
-
-          <button type="submit" class="w-full bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold rounded-lg py-2.5 text-sm transition">
-            Completar Ficha e Inscribir
-          </button>
-        </form>
-
       </div>
     </div>
 
-    <!-- PANEL DEL CLUB ACTIVO (INTERFAZ DINÁMICA SEGÚN TIPO) -->
-    <div id="clubHeaderBanner" class="bg-gradient-to-r from-slate-900 via-slate-900/90 to-slate-800/80 p-5 rounded-2xl border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <!-- BANNER DEL CLUB ACTIVO -->
+    <div id="clubHeaderBanner" class="p-5 rounded-2xl border flex flex-col md:flex-row justify-between items-start md:items-center gap-4 transition-all">
       <div>
         <div class="flex items-center gap-2">
           <span id="clubTypeBadge" class="text-xs font-bold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
             Fútbol Base
           </span>
-          <span id="clubCategoryBadge" class="text-xs text-slate-400 font-medium">Cadete A</span>
+          <span id="clubCategoryBadge" class="text-xs text-slate-400 font-medium">Cadete</span>
         </div>
-        <h2 id="currentClubTitle" class="text-2xl font-bold text-white mt-1">Nombre del Club</h2>
-        <p id="clubModeDescription" class="text-xs text-slate-400 mt-0.5">Adaptado al modelo formativo de cuotas y equidad de minutos.</p>
+        <h2 id="currentClubTitle" class="text-2xl font-bold mt-1 tracking-tight">Cargando club...</h2>
+        <p id="clubModeDescription" class="text-xs text-slate-400 mt-0.5">Sincronizado con Supabase Cloud</p>
       </div>
 
-      <div class="flex items-center gap-3">
-        <button onclick="abrirModalInscripcionJugador()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs sm:text-sm transition flex items-center gap-1.5 shadow-lg shadow-emerald-500/10">
+      <div class="no-print flex items-center gap-2.5">
+        <button onclick="generarInformeEjecutivoPDF()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold px-3.5 py-2 rounded-xl text-xs sm:text-sm transition flex items-center gap-1.5">
+          <span>🖨️</span> Exportar Balance
+        </button>
+        <button onclick="abrirModalNuevoJugador()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs sm:text-sm transition flex items-center gap-1.5 shadow-lg shadow-emerald-500/10">
           <span>+</span> Inscribir Jugador
         </button>
       </div>
     </div>
 
-    <!-- KPI / TARJETAS RESUMEN (ADAPTABLES SEGÚN SEA PROFESIONAL O FÚTBOL BASE) -->
-    <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+    <!-- TARJETAS KPIS -->
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-4 print-kpis">
+      <div class="card-box p-4 rounded-xl border">
         <p id="kpi1Title" class="text-xs text-slate-400 uppercase font-semibold">Recaudación Cuotas</p>
-        <p id="kpi1Value" class="text-2xl font-bold mt-1 text-white">0 €</p>
+        <p id="kpi1Value" class="text-2xl font-bold mt-1">0 €</p>
         <span id="kpi1Sub" class="text-[11px] text-slate-400">0% cubierto</span>
       </div>
-      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
-        <p id="kpi2Title" class="text-xs text-slate-400 uppercase font-semibold">Minutos Totales</p>
+      <div class="card-box p-4 rounded-xl border">
+        <p class="text-xs text-slate-400 uppercase font-semibold">Minutos Totales Disputados</p>
         <p id="kpi2Value" class="text-2xl font-bold mt-1 text-sky-400">0 min</p>
         <span id="kpi2Sub" class="text-[11px] text-slate-400">0 min de media</span>
       </div>
-      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
-        <p class="text-xs text-slate-400 uppercase font-semibold">Aporte Ofensivo (G+A)</p>
+      <div class="card-box p-4 rounded-xl border">
+        <p class="text-xs text-slate-400 uppercase font-semibold">Goles / Asistencias</p>
         <p id="kpi3Value" class="text-2xl font-bold mt-1 text-emerald-400">0 / 0</p>
-        <span id="kpi3Sub" class="text-[11px] text-slate-400">Goles y asistencias</span>
+        <span id="kpi3Sub" class="text-[11px] text-slate-400">Acciones ofensivas</span>
       </div>
-      <div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
-        <p class="text-xs text-slate-400 uppercase font-semibold">Fair Play / Disciplina</p>
+      <div class="card-box p-4 rounded-xl border">
+        <p class="text-xs text-slate-400 uppercase font-semibold">Juego Limpio / Fair Play</p>
         <p id="kpi4Value" class="text-2xl font-bold mt-1 text-amber-400">0 🟨 | 0 🟥</p>
-        <span id="kpi4Sub" class="text-[11px] text-slate-400">Control de sanciones</span>
+        <span id="kpi4Sub" class="text-[11px] text-slate-400">Tarjetas de equipo</span>
       </div>
     </section>
 
-    <!-- BLOQUE INTERACTIVO: REGISTRO DE ACTAS DE PARTIDO -->
+    <!-- FORMULARIO DE PARTIDO & SEMÁFORO ADAPTATIVO (EL FORMULARIO SE OCULTA AL IMPRIMIR) -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       
-      <!-- Formulario para volcar datos de partido -->
-      <section class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3 lg:col-span-1">
-        <h3 class="text-sm font-bold uppercase text-slate-300 flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-sky-400"></span> Acta de Partido / Rendimiento
+      <!-- Volcado de acta a Supabase (no-print) -->
+      <section class="no-print card-box p-5 rounded-2xl border space-y-3 lg:col-span-1">
+        <h3 class="text-sm font-bold uppercase flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-sky-400"></span> Acta de Partido (Cloud)
         </h3>
-        <p class="text-xs text-slate-400">Introduce las estadísticas cosechadas por cada jugador al terminar la jornada.</p>
+        <p class="text-xs text-slate-400">Introduce estadísticas tras la jornada para actualizar la ficha de cada jugador.</p>
 
-        <form id="matchLogForm" onsubmit="registrarEstadisticasPartido(event)" class="space-y-3 pt-2">
+        <form onsubmit="guardarActaPartidoEnSupabase(event)" class="space-y-3 pt-2">
           <div>
             <label class="text-xs text-slate-400 block mb-1">Seleccionar Jugador</label>
-            <select id="matchSelectPlayer" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs sm:text-sm text-white focus:outline-none">
-              <option value="">-- Elige un jugador --</option>
+            <select id="matchSelectPlayer" required class="input-field w-full rounded-lg px-3 py-2 text-xs sm:text-sm focus:outline-none">
+              <option value="">-- Selecciona jugador --</option>
             </select>
           </div>
 
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="text-xs text-slate-400 block mb-1">Minutos</label>
-              <input id="matchMins" type="number" min="0" max="120" placeholder="45" required class="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white">
+              <label class="text-xs text-slate-400 block mb-1">Minutos Jugados</label>
+              <input id="matchMins" type="number" min="0" max="120" placeholder="45" required class="input-field w-full rounded px-2.5 py-1.5 text-xs">
             </div>
             <div>
               <label class="text-xs text-slate-400 block mb-1">Goles</label>
-              <input id="matchGoals" type="number" min="0" value="0" class="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white">
+              <input id="matchGoals" type="number" min="0" value="0" class="input-field w-full rounded px-2.5 py-1.5 text-xs">
             </div>
           </div>
 
           <div class="grid grid-cols-3 gap-2">
             <div>
               <label class="text-xs text-slate-400 block mb-1">Asistencias</label>
-              <input id="matchAssists" type="number" min="0" value="0" class="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white">
+              <input id="matchAssists" type="number" min="0" value="0" class="input-field w-full rounded px-2.5 py-1.5 text-xs">
             </div>
             <div>
               <label class="text-xs text-slate-400 block mb-1">Amarillas 🟨</label>
-              <input id="matchYellows" type="number" min="0" max="2" value="0" class="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white">
+              <input id="matchYellows" type="number" min="0" max="2" value="0" class="input-field w-full rounded px-2.5 py-1.5 text-xs">
             </div>
             <div>
               <label class="text-xs text-slate-400 block mb-1">Rojas 🟥</label>
-              <input id="matchReds" type="number" min="0" max="1" value="0" class="w-full bg-slate-950 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white">
+              <input id="matchReds" type="number" min="0" max="1" value="0" class="input-field w-full rounded px-2.5 py-1.5 text-xs">
             </div>
           </div>
 
-          <button type="submit" class="w-full bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold rounded-lg py-2 text-xs sm:text-sm transition mt-1">
-            + Añadir al Expediente del Jugador
+          <button id="btnSaveMatch" type="submit" class="w-full bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold rounded-lg py-2 text-xs sm:text-sm transition mt-1">
+            + Guardar en la Nube
           </button>
         </form>
       </section>
 
-      <!-- Semáforo de Diagnóstico Contextual -->
-      <section class="bg-slate-900 p-5 rounded-2xl border border-slate-800 lg:col-span-2 flex flex-col justify-between">
+      <!-- Diagnóstico Adaptativo / Auditoría Ejecutiva -->
+      <section class="card-box p-5 rounded-2xl border lg:col-span-2 flex flex-col justify-between">
         <div>
           <div class="flex items-center justify-between mb-3">
-            <h3 id="diagnosisHeader" class="text-sm font-bold uppercase text-slate-300 flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-amber-400"></span> Diagnóstico Inteligente
+            <h3 id="diagnosisHeader" class="text-sm font-bold uppercase flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-amber-400"></span> Diagnóstico Adaptativo
             </h3>
-            <span id="algorithmTypeTag" class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700">Módulo Formativo</span>
+            <span id="syncIndicator" class="text-[10px] bg-emerald-950/80 text-emerald-400 px-2.5 py-1 rounded-full border border-emerald-800 font-semibold no-print">● Conectado a Supabase</span>
           </div>
 
           <p id="diagnosisDescription" class="text-xs text-slate-400 leading-relaxed">
-            Evaluando equidad en los minutos disputados por plantilla para evitar desmotivación y abandono deportivo en etapas formativas.
+            Midiendo indicadores deportivos y financieros en tiempo real desde la nube.
           </p>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-            <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+            <div class="inner-box p-3.5 rounded-xl border">
               <span id="metricDiagTitle1" class="text-xs text-slate-400 block">Minutos promedio esperados</span>
-              <span id="metricDiagVal1" class="text-lg font-bold text-white mt-0.5 block">0 min</span>
+              <span id="metricDiagVal1" class="text-lg font-bold mt-0.5 block">0 min</span>
             </div>
-            <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
-              <span id="metricDiagTitle2" class="text-xs text-slate-400 block">Alerta de seguimiento</span>
-              <span id="metricDiagVal2" class="text-sm font-semibold text-emerald-400 mt-0.5 block">Plantilla equilibrada</span>
+            <div class="inner-box p-3.5 rounded-xl border">
+              <span id="metricDiagTitle2" class="text-xs text-slate-400 block">Semáforo de situación</span>
+              <span id="metricDiagVal2" class="text-sm font-semibold text-emerald-400 mt-0.5 block">Datos al día</span>
             </div>
           </div>
         </div>
 
-        <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-500">
-          <span>Base de datos vinculada con Supabase</span>
-          <span id="syncIndicator">● En línea</span>
+        <div class="no-print mt-4 pt-3 border-t border-slate-800/80 text-[11px] text-slate-500 flex justify-between">
+          <span>💡 Filtra jugadores abajo o haz clic en su nombre para ver su <strong>Ficha Técnica</strong>.</span>
+          <button onclick="cargarTodoDesdeSupabase()" class="text-sky-400 hover:text-sky-300 font-medium">🔄 Sincronizar</button>
         </div>
       </section>
 
     </div>
 
-    <!-- TABLA MAESTRA DE JUGADORES / PLANTILLA -->
-    <section class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
-      <div class="p-4 border-b border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+    <!-- SECCIÓN: TABLA DE JUGADORES + BARRA DE FILTROS Y BÚSQUEDA -->
+    <section class="card-box rounded-2xl border overflow-hidden shadow-xl">
+      
+      <!-- Cabecera de la Sección -->
+      <div class="p-4 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 table-header-border">
         <div>
-          <h3 class="font-bold text-white text-base">Plantilla Oficial & Rendimiento</h3>
-          <p class="text-xs text-slate-400">Listado consolidado de jugadores inscritos</p>
+          <h3 class="font-bold text-base">Plantilla Oficial & Rendimiento</h3>
+          <p class="text-xs text-slate-400">Gestión ágil para plantillas extensas con búsqueda en tiempo real</p>
         </div>
-        <span id="playerCounterBadge" class="text-xs bg-slate-800 px-3 py-1 rounded-full text-slate-300 border border-slate-700">
-          0 jugadores inscritos
-        </span>
+        <div class="flex items-center gap-2">
+          <span id="playerFilteredBadge" class="text-xs bg-slate-800 dark:bg-slate-800 light:bg-slate-200 px-3 py-1 rounded-full text-slate-300 border border-slate-700">
+            0 jugadores
+          </span>
+        </div>
       </div>
 
+      <!-- BARRA DE FILTROS Y BÚSQUEDA (NO-PRINT PARA LA GENERACIÓN DE PDF) -->
+      <div class="no-print p-4 border-b border-slate-800/60 bg-slate-900/40 dark:bg-slate-900/40 light:bg-slate-50 flex flex-col md:flex-row items-stretch md:items-center gap-3">
+        
+        <!-- Buscador por Nombre o Dorsal -->
+        <div class="relative flex-1">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500 text-xs">
+            🔍
+          </span>
+          <input id="searchInput" type="text" oninput="aplicarFiltrosYBusqueda()" placeholder="Buscar jugador por nombre o dorsal..." class="input-field w-full pl-8 pr-3 py-2 text-xs rounded-xl focus:outline-none">
+        </div>
+
+        <!-- Filtro por Demarcación / Posición -->
+        <div class="w-full md:w-44">
+          <select id="filterPosition" onchange="aplicarFiltrosYBusqueda()" class="input-field w-full px-3 py-2 text-xs rounded-xl focus:outline-none">
+            <option value="ALL">Todas las posiciones</option>
+            <option value="Portero">Porteros</option>
+            <option value="Defensa">Defensas</option>
+            <option value="Centrocampista">Centrocampistas</option>
+            <option value="Delantero">Delanteros</option>
+          </select>
+        </div>
+
+        <!-- Filtro Contextual por Estado (Cuota en Base / Rendimiento en Pro) -->
+        <div class="w-full md:w-52">
+          <select id="filterStatus" onchange="aplicarFiltrosYBusqueda()" class="input-field w-full px-3 py-2 text-xs rounded-xl focus:outline-none">
+            <option value="ALL">Todos los estados</option>
+            <!-- Opciones dinámicas según tipo de club -->
+          </select>
+        </div>
+
+        <!-- Botón Restablecer Filtros -->
+        <button onclick="limpiarFiltros()" class="text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 px-3 py-2 rounded-xl transition font-medium whitespace-nowrap">
+          Limpiar
+        </button>
+      </div>
+
+      <!-- Tabla de Jugadores Filtrada -->
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs sm:text-sm">
-          <thead class="bg-slate-950 text-slate-400 uppercase text-[11px]">
+          <thead class="table-thead uppercase text-[11px]">
             <tr>
               <th class="p-3">#</th>
-              <th class="p-3">Jugador</th>
+              <th class="p-3">Jugador (Ficha Detalle)</th>
               <th class="p-3">Posición</th>
               <th id="thEconomy" class="p-3 text-right">Cuota Anual</th>
               <th class="p-3 text-right">Partidos</th>
@@ -298,207 +286,716 @@
               <th class="p-3 text-right">Asist.</th>
               <th class="p-3 text-center">Tarjetas</th>
               <th id="thDiagnosis" class="p-3 text-center">Diagnóstico</th>
-              <th class="p-3 text-center">Acción</th>
+              <th class="p-3 text-center no-print">Acción</th>
             </tr>
           </thead>
-          <tbody id="rosterTableBody" class="divide-y divide-slate-800 text-slate-300">
+          <tbody id="rosterTableBody" class="divide-y divide-slate-800 table-divide">
             <!-- Rellenado dinámicamente -->
           </tbody>
         </table>
+      </div>
+
+      <!-- Pie de página formal exclusivo para el PDF impreso -->
+      <div class="print-only p-4 border-t border-slate-300 text-xs text-slate-600 flex justify-between mt-4">
+        <span>SportPlatform • Balance Oficial de Temporada</span>
+        <span>Página 1 de 1</span>
       </div>
     </section>
 
   </main>
 
-  <footer class="border-t border-slate-800 py-4 text-center text-xs text-slate-600">
-    SportPlatform MVP • Adaptable para Fútbol Profesional y Fútbol Base
+  <!-- ======================================================== -->
+  <!-- MODAL: FICHA INDIVIDUAL DEL JUGADOR (VISTA DE DETALLE) -->
+  <!-- ======================================================== -->
+  <div id="playerDetailModal" class="no-print hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
+    <div class="card-box rounded-3xl max-w-4xl w-full border my-auto p-5 sm:p-7 shadow-2xl relative space-y-6 max-h-[92vh] overflow-y-auto">
+      
+      <!-- Botón Cerrar -->
+      <button onclick="cerrarFichaDetalle()" class="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 flex items-center justify-center text-slate-300 hover:text-white transition text-sm">✕</button>
+
+      <!-- Cabecera de la Ficha del Jugador -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+        <div class="flex items-center gap-4">
+          <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-600 to-sky-500 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-emerald-500/20">
+            <span id="detailPlayerDorsal">#10</span>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 id="detailPlayerName" class="text-2xl font-black tracking-tight">Nombre del Jugador</h2>
+              <span id="detailPlayerPosition" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-800 border border-slate-700 text-slate-300">Delantero</span>
+            </div>
+            <p class="text-xs text-slate-400 mt-1 flex items-center gap-2">
+              <span>Club: <strong id="detailClubName" class="text-emerald-400 font-semibold">Cantera</strong></span>
+              <span>•</span>
+              <span id="detailPlayerEco">Cuota: 380 €</span>
+              <span>•</span>
+              <span id="detailPlayerStatusBadge" class="px-2 py-0.5 rounded text-[10px] font-bold">Al día</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Rating General / Score Formativo -->
+        <div class="bg-slate-950/60 dark:bg-slate-950/60 light:bg-slate-100 p-3 rounded-2xl border border-slate-800/80 flex items-center gap-3">
+          <div class="text-right">
+            <span class="text-[10px] text-slate-400 uppercase font-bold block">Índice Rendimiento</span>
+            <span id="detailScoreValue" class="text-xl font-black text-emerald-400">8.6 / 10</span>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-lg font-black">
+            ⚡
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarjetas Métricas Rápidas del Jugador -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="inner-box p-3 rounded-xl border text-center">
+          <span class="text-[10px] text-slate-400 uppercase font-semibold">Minutos Totales</span>
+          <p id="detailMinutes" class="text-lg font-bold text-sky-400 mt-0.5">0'</p>
+          <span id="detailMinutesAvg" class="text-[10px] text-slate-500">0' por partido</span>
+        </div>
+        <div class="inner-box p-3 rounded-xl border text-center">
+          <span class="text-[10px] text-slate-400 uppercase font-semibold">Goles Marcados</span>
+          <p id="detailGoals" class="text-lg font-bold text-emerald-400 mt-0.5">0</p>
+          <span id="detailGoalsFreq" class="text-[10px] text-slate-500">cada 0 mins</span>
+        </div>
+        <div class="inner-box p-3 rounded-xl border text-center">
+          <span class="text-[10px] text-slate-400 uppercase font-semibold">Asistencias</span>
+          <p id="detailAssists" class="text-lg font-bold text-indigo-400 mt-0.5">0</p>
+          <span id="detailGoalContribution" class="text-[10px] text-slate-500">0% aportación</span>
+        </div>
+        <div class="inner-box p-3 rounded-xl border text-center">
+          <span class="text-[10px] text-slate-400 uppercase font-semibold">Disciplina</span>
+          <p id="detailCards" class="text-lg font-bold text-amber-400 mt-0.5">0🟨 0🟥</p>
+          <span class="text-[10px] text-slate-500">Juego Limpio</span>
+        </div>
+      </div>
+
+      <!-- SECCIÓN DE GRÁFICOS INTERACTIVOS (CHART.JS) -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div class="inner-box p-4 rounded-2xl border space-y-2">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300">📈 Evolución de Minutos (Partidos)</h4>
+            <span class="text-[10px] text-slate-400">Últimas actas</span>
+          </div>
+          <div class="h-52 relative">
+            <canvas id="chartMinutesEvolution"></canvas>
+          </div>
+        </div>
+
+        <div class="inner-box p-4 rounded-2xl border space-y-2">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-300">🕸️ Perfil Técnico & Atributos</h4>
+            <span class="text-[10px] text-slate-400">Escala 1 - 100</span>
+          </div>
+          <div class="h-52 relative flex items-center justify-center">
+            <canvas id="chartRadarSkills"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- HISTORIAL DE ACTAS DEL JUGADOR & NOTAS DEL SCOUT/ENTRENADOR -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div class="lg:col-span-2 inner-box rounded-2xl border overflow-hidden p-3.5 space-y-2">
+          <h4 class="text-xs font-bold uppercase text-slate-300">Historial Detallado de Jornadas</h4>
+          <div class="overflow-x-auto max-h-40 overflow-y-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="text-[10px] uppercase text-slate-400 border-b border-slate-800">
+                <tr>
+                  <th class="py-1.5 px-2">Fecha / Jornada</th>
+                  <th class="py-1.5 px-2 text-right">Minutos</th>
+                  <th class="py-1.5 px-2 text-right">Goles</th>
+                  <th class="py-1.5 px-2 text-right">Asist.</th>
+                  <th class="py-1.5 px-2 text-center">Tarjetas</th>
+                </tr>
+              </thead>
+              <tbody id="detailMatchHistoryBody" class="divide-y divide-slate-800/60">
+                <!-- Se llena dinámicamente -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="inner-box rounded-2xl border p-4 space-y-3 flex flex-col justify-between">
+          <div>
+            <h4 class="text-xs font-bold uppercase text-slate-300 flex items-center gap-1.5">
+              <span>📝</span> Informe de Evaluación
+            </h4>
+            <p id="detailScoutNotes" class="text-xs text-slate-400 mt-2 leading-relaxed">
+              Cargando valoración táctica del jugador...
+            </p>
+          </div>
+
+          <div class="pt-2 border-t border-slate-800 text-[11px] text-slate-500">
+            Diagnóstico: <span id="detailDiagnosisTag" class="font-semibold text-emerald-400">Formativo Adecuado</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL DE REGISTRO: NUEVO CLUB -->
+  <div id="clubModal" class="no-print hidden fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="card-box rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl relative border">
+      <button onclick="cerrarModal('clubModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-sm">✕</button>
+
+      <div class="text-center space-y-1">
+        <h2 class="text-xl font-bold tracking-tight">Registrar Nuevo Club</h2>
+        <p class="text-xs text-slate-400">Se guardará de forma permanente en tu base de datos Supabase</p>
+      </div>
+
+      <form onsubmit="guardarClubEnSupabase(event)" class="space-y-4">
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">Nombre de la Entidad o Escuela</label>
+          <input id="inputClubName" type="text" placeholder="Ej. UD San Pedro" required class="input-field w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">Estructura</label>
+            <select id="inputClubStructure" onchange="actualizarOpcionesCategorias()" class="input-field w-full rounded-lg px-3 py-2 text-sm focus:outline-none">
+              <option value="grassroots">Fútbol Base</option>
+              <option value="pro">Profesional</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">Categoría</label>
+            <select id="inputClubCategory" class="input-field w-full rounded-lg px-3 py-2 text-sm focus:outline-none"></select>
+          </div>
+        </div>
+
+        <div>
+          <label id="inputBudgetLabel" class="text-xs text-slate-400 block mb-1">Presupuesto Temporada (€)</label>
+          <input id="inputClubBudget" type="number" value="18000" required class="input-field w-full rounded-lg px-3 py-2 text-sm text-emerald-400 font-semibold focus:outline-none">
+        </div>
+
+        <button id="btnSaveClub" type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-lg py-2.5 text-sm transition">
+          Crear Club en Supabase
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL DE REGISTRO: NUEVO JUGADOR -->
+  <div id="playerModal" class="no-print hidden fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="card-box rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl relative border">
+      <button onclick="cerrarModal('playerModal')" class="absolute top-4 right-4 text-slate-400 hover:text-white text-sm">✕</button>
+
+      <div class="text-center space-y-1">
+        <h2 class="text-xl font-bold tracking-tight">Inscribir Jugador</h2>
+        <p id="playerModalSub" class="text-xs text-slate-400">Club activo: ...</p>
+      </div>
+
+      <form onsubmit="guardarJugadorEnSupabase(event)" class="space-y-4">
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">Nombre Completo</label>
+          <input id="inputPlayerName" type="text" placeholder="Ej. Carlos Navarro" required class="input-field w-full rounded-lg px-3 py-2 text-sm focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">Dorsal</label>
+            <input id="inputPlayerDorsal" type="number" placeholder="10" required class="input-field w-full rounded-lg px-3 py-2 text-sm focus:outline-none">
+          </div>
+          <div>
+            <label class="text-xs text-slate-400 block mb-1">Posición</label>
+            <select id="inputPlayerPos" class="input-field w-full rounded-lg px-3 py-2 text-sm focus:outline-none">
+              <option>Portero</option>
+              <option>Defensa</option>
+              <option>Centrocampista</option>
+              <option>Delantero</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label id="inputPlayerFeeLabel" class="text-xs text-slate-400 block mb-1">Cuota Anual (€)</label>
+            <input id="inputPlayerFee" type="number" value="380" required class="input-field w-full rounded-lg px-3 py-2 text-sm text-emerald-400 font-semibold focus:outline-none">
+          </div>
+          <div>
+            <label id="inputPlayerStatusLabel" class="text-xs text-slate-400 block mb-1">Estado de Pago</label>
+            <select id="inputPlayerStatus" class="input-field w-full rounded-lg px-3 py-2 text-sm focus:outline-none">
+              <option value="paid">Pagado</option>
+              <option value="pending">Pendiente</option>
+              <option value="exempt">Beca / Exento</option>
+            </select>
+          </div>
+        </div>
+
+        <button id="btnSavePlayer" type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-lg py-2.5 text-sm transition">
+          Guardar Ficha en Supabase
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <footer class="no-print border-t py-4 text-center text-xs footer-text border-slate-800">
+    SportPlatform Cloud • Sincronización completa con Supabase PostgreSQL & Generador de Informes PDF
   </footer>
 
+  <style>
+    /* Estilos dinámicos para cambio de Tema (Modo Claro vs Modo Oscuro) */
+    html.dark {
+      color-scheme: dark;
+    }
+    html.dark body {
+      background-color: #020617; /* Slate 950 */
+      color: #f8fafc;
+    }
+    html.dark .card-box {
+      background-color: #0f172a; /* Slate 900 */
+      border-color: #1e293b;
+    }
+    html.dark .inner-box {
+      background-color: #020617;
+      border-color: #1e293b;
+    }
+    html.dark .input-field {
+      background-color: #020617;
+      border: 1px solid #1e293b;
+      color: #f8fafc;
+    }
+    html.dark .table-thead {
+      background-color: #020617;
+      color: #94a3b8;
+    }
+    html.dark .table-header-border {
+      border-color: #1e293b;
+    }
+    html.dark .table-divide > :not([hidden]) ~ :not([hidden]) {
+      border-color: #1e293b;
+    }
+
+    /* Modo Claro (Blanco) */
+    html.light {
+      color-scheme: light;
+    }
+    html.light body {
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    html.light header {
+      background-color: rgba(255, 255, 255, 0.95) !important;
+      border-color: #e2e8f0 !important;
+    }
+    html.light .header-title {
+      color: #0f172a !important;
+    }
+    html.light .header-sub {
+      color: #64748b !important;
+    }
+    html.light .club-badge-box {
+      background-color: #f1f5f9 !important;
+      border-color: #cbd5e1 !important;
+      color: #0f172a !important;
+    }
+    html.light .card-box {
+      background-color: #ffffff;
+      border-color: #e2e8f0;
+      color: #0f172a;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+    html.light .inner-box {
+      background-color: #f8fafc;
+      border-color: #e2e8f0;
+      color: #0f172a;
+    }
+    html.light .input-field {
+      background-color: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: #0f172a;
+    }
+    html.light .table-thead {
+      background-color: #f1f5f9;
+      color: #475569;
+    }
+    html.light .table-header-border {
+      border-color: #e2e8f0;
+    }
+    html.light .table-divide > :not([hidden]) ~ :not([hidden]) {
+      border-color: #f1f5f9;
+    }
+    html.light .footer-text {
+      border-color: #e2e8f0;
+      color: #94a3b8;
+    }
+    html.light #clubHeaderBanner {
+      background: linear-gradient(to right, #ffffff, #f1f5f9) !important;
+      border-color: #e2e8f0 !important;
+    }
+    html.light #currentClubTitle {
+      color: #0f172a !important;
+    }
+
+    /* REGLAS EXCLUSIVAS PARA EXPORTACIÓN A PDF / IMPRESIÓN (@media print) */
+    .print-only {
+      display: none;
+    }
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        padding: 0 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+      .card-box, .inner-box {
+        background-color: #ffffff !important;
+        border-color: #d1d5db !important;
+        color: #000000 !important;
+        box-shadow: none !important;
+      }
+      .table-thead {
+        background-color: #f3f4f6 !important;
+        color: #111827 !important;
+      }
+      table {
+        font-size: 10px !important;
+      }
+      th, td {
+        padding: 4px 6px !important;
+      }
+      #clubHeaderBanner {
+        background: #f9fafb !important;
+        border: 1px solid #e5e7eb !important;
+      }
+      .print-kpis {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 8px !important;
+      }
+    }
+  </style>
+
   <script>
-    // --- CONFIGURACIÓN SUPABASE ---
+    // --- CREDENCIALES DE SUPABASE ---
     const SUPABASE_URL = "https://ouznpnpiuxonieduxrye.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_NPk9F0NmaVU9emfm-aJIUA_lU_1v-Ve";
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // CATEGORÍAS SEGÚN EL TIPO DE CLUB
     const CATEGORIAS_BASE = ["Prebenjamín", "Benjamín", "Alevín", "Infantil", "Cadete", "Juvenil Cantera"];
     const CATEGORIAS_PRO = ["1ª División", "2ª División", "1ª RFEF", "2ª RFEF", "3ª RFEF", "Regional Preferente"];
 
-    // ESTADO DE LA APLICACIÓN
+    // ESTADO EN MEMORIA
+    let clubes = [];
     let clubActivo = null;
-    let listaJugadores = [];
+    let jugadores = [];
+    let actasPartidos = [];
 
-    // Clubes iniciales si no existen en BD
-    let clubesGuardados = [
-      {
-        id: "club_grassroots_1",
-        name: "CD Cantera Olímpica",
-        structure: "grassroots", // 'grassroots' o 'pro'
-        category: "Cadete",
-        total_budget: 15000
-      },
-      {
-        id: "club_pro_2",
-        name: "Atlético Metropolitano CF",
-        structure: "pro",
-        category: "2ª RFEF",
-        total_budget: 350000
-      }
-    ];
+    // Instancias de Chart.js
+    let chartMinutesInstance = null;
+    let chartRadarInstance = null;
+    let jugadorSeleccionadoActual = null;
 
-    // Jugadores de demostración para cantera
-    let jugadoresGrassrootsDemo = [
-      { id: "p1", dorsal: 10, full_name: "Mateo Valdés", position: "Centrocampista", economy_val: 380, status: "paid", matches: 7, minutes: 340, goals: 4, assists: 6, yellows: 1, reds: 0 },
-      { id: "p2", dorsal: 9, full_name: "Álvaro Ruiz", position: "Delantero", economy_val: 380, status: "paid", matches: 7, minutes: 350, goals: 8, assists: 2, yellows: 0, reds: 0 },
-      { id: "p3", dorsal: 4, full_name: "Darío Gil", position: "Defensa", economy_val: 380, status: "pending", matches: 6, minutes: 300, goals: 1, assists: 0, yellows: 2, reds: 0 },
-      { id: "p4", dorsal: 1, full_name: "Pablo Soria", position: "Portero", economy_val: 380, status: "paid", matches: 7, minutes: 350, goals: 0, assists: 0, yellows: 0, reds: 0 },
-      { id: "p5", dorsal: 14, full_name: "Lucas Méndez", position: "Delantero", economy_val: 380, status: "exempt", matches: 3, minutes: 80, goals: 0, assists: 0, yellows: 0, reds: 0 }
-    ];
+    // Control de tema (oscuro por defecto)
+    let currentTheme = localStorage.getItem('theme') || 'dark';
 
-    // Jugadores de demostración para profesional
-    let jugadoresProDemo = [
-      { id: "pro1", dorsal: 9, full_name: "Marcos Asensio G.", position: "Delantero", economy_val: 45000, status: "contract", matches: 12, minutes: 980, goals: 9, assists: 4, yellows: 2, reds: 0 },
-      { id: "pro2", dorsal: 5, full_name: "Carlos Barroso", position: "Defensa", economy_val: 32000, status: "contract", matches: 12, minutes: 1080, goals: 2, assists: 1, yellows: 4, reds: 1 },
-      { id: "pro3", dorsal: 8, full_name: "Javier Serrano", position: "Centrocampista", economy_val: 60000, status: "contract", matches: 6, minutes: 240, goals: 0, assists: 1, yellows: 1, reds: 0 }
-    ];
-
-    // INICIALIZACIÓN
-    window.addEventListener('DOMContentLoaded', () => {
-      adaptarCategorias();
-      seleccionarClub(clubesGuardados[0]);
+    window.addEventListener('DOMContentLoaded', async () => {
+      aplicarTema(currentTheme);
+      actualizarOpcionesCategorias();
+      await cargarTodoDesdeSupabase();
     });
 
-    // Cambiar lista desplegable de categorías según tipo de club seleccionado
-    function adaptarCategorias() {
-      const tipo = document.getElementById('newClubType').value;
-      const selectCat = document.getElementById('newClubCategory');
-      const budgetHint = document.getElementById('budgetHint');
-      const budgetLabel = document.getElementById('budgetLabel');
+    // ==========================================
+    // SISTEMA DE CAMBIO DE TEMA (CLARO / OSCURO)
+    // ==========================================
+    function toggleTheme() {
+      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('theme', currentTheme);
+      aplicarTema(currentTheme);
       
-      selectCat.innerHTML = "";
-      const lista = tipo === 'grassroots' ? CATEGORIAS_BASE : CATEGORIAS_PRO;
-      lista.forEach(cat => {
-        selectCat.innerHTML += `<option value="${cat}">${cat}</option>`;
-      });
-
-      if (tipo === 'grassroots') {
-        budgetLabel.innerText = "Presupuesto Anual del Equipo / Escuela (€)";
-        budgetHint.innerText = "Coste operativo anual (equipaciones, inscripciones federativas, campos).";
-        document.getElementById('newClubBudget').value = 15000;
-      } else {
-        budgetLabel.innerText = "Límite / Masa Salarial de Plantilla (€)";
-        budgetHint.innerText = "Monto total destinado a salarios del primer equipo (Fair Play Financiero).";
-        document.getElementById('newClubBudget').value = 350000;
+      const modal = document.getElementById('playerDetailModal');
+      if (!modal.classList.contains('hidden') && jugadorSeleccionadoActual) {
+        renderizarGraficosJugador(jugadorSeleccionadoActual);
       }
     }
 
-    // Seleccionar o cambiar el Club en uso
-    function seleccionarClub(club) {
-      clubActivo = club;
-      document.getElementById('activeClubNameTxt').innerText = `${club.name} (${club.category})`;
-      document.getElementById('currentClubTitle').innerText = club.name;
-      document.getElementById('clubCategoryBadge').innerText = club.category;
-      
-      const badge = document.getElementById('clubTypeBadge');
-      const desc = document.getElementById('clubModeDescription');
-      const algoTag = document.getElementById('algorithmTypeTag');
+    function aplicarTema(theme) {
+      const html = document.documentElement;
+      const themeIcon = document.getElementById('themeIcon');
+      const themeText = document.getElementById('themeText');
+      const themeBtn = document.getElementById('themeToggleBtn');
 
-      if (club.structure === 'grassroots') {
-        badge.innerText = "Fútbol Base / Cantera";
-        badge.className = "text-xs font-bold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
-        desc.innerText = "Panel formativo: optimizado para seguimiento de cuotas, reparto de minutos y juego limpio.";
-        algoTag.innerText = "Módulo Formativo (Equidad)";
-        document.getElementById('thEconomy').innerText = "Cuota Anual";
-        document.getElementById('kpi1Title').innerText = "Recaudación Cuotas";
-        listaJugadores = jugadoresGrassrootsDemo;
+      if (theme === 'light') {
+        html.classList.remove('dark');
+        html.classList.add('light');
+        themeIcon.innerText = "🌙";
+        themeText.innerText = "Modo Oscuro";
+        themeBtn.className = "p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center gap-1.5 text-xs font-semibold";
       } else {
-        badge.innerText = "Club Profesional";
-        badge.className = "text-xs font-bold uppercase px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30";
-        desc.innerText = "Panel profesional: optimizado para control de masa salarial, coste por minuto útil y rendimiento.";
-        algoTag.innerText = "Módulo Financiero (Rentabilidad)";
-        document.getElementById('thEconomy').innerText = "Salario Anual";
-        document.getElementById('kpi1Title').innerText = "Gasto Masa Salarial";
-        listaJugadores = jugadoresProDemo;
+        html.classList.remove('light');
+        html.classList.add('dark');
+        themeIcon.innerText = "☀️";
+        themeText.innerText = "Modo Claro";
+        themeBtn.className = "p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-slate-300 hover:text-white transition flex items-center gap-1.5 text-xs font-medium";
       }
-
-      actualizarSelectJugadoresPartido();
-      actualizarVistasDashboard();
-      cerrarModalRegistro();
     }
 
-    // Actualizar select de actas de partido
-    function actualizarSelectJugadoresPartido() {
-      const select = document.getElementById('matchSelectPlayer');
-      select.innerHTML = '<option value="">-- Elige un jugador --</option>';
-      listaJugadores.forEach(j => {
-        select.innerHTML += `<option value="${j.id}">#${j.dorsal} - ${j.full_name} (${j.position})</option>`;
-      });
-    }
+    // ==========================================
+    // CARGA DE DATOS DESDE SUPABASE
+    // ==========================================
+    async function cargarTodoDesdeSupabase() {
+      document.getElementById('syncIndicator').innerText = "🔄 Sincronizando...";
+      
+      try {
+        const { data: clubsDB, error: errClubs } = await supabaseClient
+          .from('clubs')
+          .select('*')
+          .order('created_at', { ascending: true });
 
-    // Calcular KPIs y Rellenar Tabla según el tipo de club
-    function actualizarVistasDashboard() {
-      const isBase = clubActivo.structure === 'grassroots';
-      const budget = clubActivo.total_budget || 1;
+        if (errClubs) throw errClubs;
 
-      const totalEconomico = listaJugadores.reduce((acc, j) => {
-        if (isBase) {
-          return j.status === 'paid' ? acc + Number(j.economy_val) : acc;
+        if (!clubsDB || clubsDB.length === 0) {
+          const { data: newClub, error: errNew } = await supabaseClient
+            .from('clubs')
+            .insert([{
+              name: 'CD Cantera Olímpica',
+              structure: 'grassroots',
+              category: 'Cadete',
+              total_budget: 15000
+            }])
+            .select()
+            .single();
+
+          if (!errNew && newClub) clubes = [newClub];
         } else {
-          return acc + Number(j.economy_val);
+          clubes = clubsDB;
         }
+
+        if (!clubActivo && clubes.length > 0) {
+          clubActivo = clubes[0];
+        } else if (clubActivo) {
+          clubActivo = clubes.find(c => c.id === clubActivo.id) || clubes[0];
+        }
+
+        renderizarSelectorClubes();
+        await cargarJugadoresYPartidosDelClubActivo();
+        
+        document.getElementById('syncIndicator').innerText = "● Conectado a Supabase";
+      } catch (e) {
+        console.error("Error al sincronizar con Supabase:", e);
+        document.getElementById('syncIndicator').innerText = "⚠️ Error de conexión";
+      }
+    }
+
+    async function cargarJugadoresYPartidosDelClubActivo() {
+      if (!clubActivo) return;
+
+      const { data: playersDB, error: errPlayers } = await supabaseClient
+        .from('players')
+        .select('*')
+        .eq('club_id', clubActivo.id)
+        .order('dorsal', { ascending: true });
+
+      if (errPlayers) {
+        console.error("Error cargando jugadores:", errPlayers);
+        return;
+      }
+      jugadores = playersDB || [];
+
+      const playerIds = jugadores.map(j => j.id);
+      if (playerIds.length > 0) {
+        const { data: matchesDB, error: errMatches } = await supabaseClient
+          .from('match_performances')
+          .select('*')
+          .in('player_id', playerIds)
+          .order('match_date', { ascending: true });
+
+        actasPartidos = errMatches ? [] : (matchesDB || []);
+      } else {
+        actasPartidos = [];
+      }
+
+      actualizarFiltrosSegunEstructuraClub();
+      actualizarVistasDashboard();
+      actualizarSelectorJugadoresActa();
+    }
+
+    function obtenerEstadisticasConsolidadas() {
+      return jugadores.map(j => {
+        const partidosDelJugador = actasPartidos.filter(m => m.player_id === j.id);
+        const matchesCount = partidosDelJugador.length;
+        const minutesSum = partidosDelJugador.reduce((sum, m) => sum + (m.minutes_played || 0), 0);
+        const goalsSum = partidosDelJugador.reduce((sum, m) => sum + (m.goals || 0), 0);
+        const assistsSum = partidosDelJugador.reduce((sum, m) => sum + (m.assists || 0), 0);
+        const yellowsSum = partidosDelJugador.reduce((sum, m) => sum + (m.yellow_cards || 0), 0);
+        const redsSum = partidosDelJugador.reduce((sum, m) => sum + (m.red_cards || 0), 0);
+
+        return {
+          ...j,
+          matches: matchesCount,
+          minutes: minutesSum,
+          goals: goalsSum,
+          assists: assistsSum,
+          yellows: yellowsSum,
+          reds: redsSum,
+          matchList: partidosDelJugador
+        };
+      });
+    }
+
+    // ==========================================
+    // FILTROS Y BÚSQUEDA EN TIEMPO REAL
+    // ==========================================
+    function actualizarFiltrosSegunEstructuraClub() {
+      const isBase = clubActivo && clubActivo.structure === 'grassroots';
+      const selectStatus = document.getElementById('filterStatus');
+
+      if (isBase) {
+        selectStatus.innerHTML = `
+          <option value="ALL">Todas las cuotas</option>
+          <option value="paid">Cuota Pagada (Al día)</option>
+          <option value="pending">Cuota Pendiente</option>
+          <option value="exempt">Beca / Exento</option>
+          <option value="NEEDS_MINUTES">Atención: Requiere Minutos</option>
+        `;
+      } else {
+        selectStatus.innerHTML = `
+          <option value="ALL">Todos los estados</option>
+          <option value="OVERCOST">Alerta: Sobrecoste Salarial</option>
+          <option value="EFFICIENT">Rendimiento Rentable</option>
+          <option value="contract">Contrato en vigor</option>
+          <option value="cedido">Cedido</option>
+        `;
+      }
+    }
+
+    function limpiarFiltros() {
+      document.getElementById('searchInput').value = "";
+      document.getElementById('filterPosition').value = "ALL";
+      document.getElementById('filterStatus').value = "ALL";
+      aplicarFiltrosYBusqueda();
+    }
+
+    function aplicarFiltrosYBusqueda() {
+      const searchVal = document.getElementById('searchInput').value.toLowerCase().trim();
+      const posVal = document.getElementById('filterPosition').value;
+      const statusVal = document.getElementById('filterStatus').value;
+
+      const isBase = clubActivo.structure === 'grassroots';
+      const statsList = obtenerEstadisticasConsolidadas();
+      const totalMins = statsList.reduce((acc, j) => acc + j.minutes, 0);
+      const mediaMins = statsList.length > 0 ? Math.round(totalMins / statsList.length) : 0;
+
+      const filtrados = statsList.filter(j => {
+        // Filtro por Búsqueda (Nombre o Dorsal)
+        const matchSearch = !searchVal || 
+          j.full_name.toLowerCase().includes(searchVal) || 
+          String(j.dorsal).includes(searchVal);
+
+        // Filtro por Posición
+        const matchPos = posVal === "ALL" || j.position === posVal;
+
+        // Filtro por Estado (Cuotas en Base o Rentabilidad en Pro)
+        let matchStatus = true;
+        if (statusVal !== "ALL") {
+          if (isBase) {
+            if (statusVal === "NEEDS_MINUTES") {
+              matchStatus = j.minutes < (mediaMins * 0.45);
+            } else {
+              matchStatus = j.fee_status === statusVal;
+            }
+          } else {
+            const salVal = Number(j.annual_salary) || 0;
+            const cMin = j.minutes > 0 ? (salVal / j.minutes) : salVal;
+            if (statusVal === "OVERCOST") {
+              matchStatus = cMin > 45;
+            } else if (statusVal === "EFFICIENT") {
+              matchStatus = cMin <= 45;
+            } else {
+              matchStatus = j.fee_status === statusVal;
+            }
+          }
+        }
+
+        return matchSearch && matchPos && matchStatus;
+      });
+
+      renderizarTablaPlantilla(filtrados, mediaMins, isBase);
+    }
+
+    // ==========================================
+    // ACTUALIZACIÓN DE VISTAS Y KPIS
+    // ==========================================
+    function actualizarVistasDashboard() {
+      if (!clubActivo) return;
+
+      const isBase = clubActivo.structure === 'grassroots';
+      const budget = Number(clubActivo.total_budget) || 1;
+      const statsList = obtenerEstadisticasConsolidadas();
+
+      document.getElementById('currentClubTitle').innerText = clubActivo.name;
+      document.getElementById('clubCategoryBadge').innerText = clubActivo.category || 'General';
+      const typeBadge = document.getElementById('clubTypeBadge');
+      
+      if (isBase) {
+        typeBadge.innerText = "Fútbol Base";
+        typeBadge.className = "text-xs font-bold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+        document.getElementById('kpi1Title').innerText = "Recaudación Cuotas";
+        document.getElementById('thEconomy').innerText = "Cuota Anual";
+      } else {
+        typeBadge.innerText = "Club Profesional";
+        typeBadge.className = "text-xs font-bold uppercase px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-500/30";
+        document.getElementById('kpi1Title').innerText = "Gasto Masa Salarial";
+        document.getElementById('thEconomy').innerText = "Salario Anual";
+      }
+
+      const totalEconomico = statsList.reduce((acc, j) => {
+        const val = Number(j.annual_salary) || 0;
+        if (isBase) return j.fee_status === 'paid' ? acc + val : acc;
+        return acc + val;
       }, 0);
 
-      const totalMins = listaJugadores.reduce((acc, j) => acc + Number(j.minutes), 0);
-      const totalGoles = listaJugadores.reduce((acc, j) => acc + Number(j.goals), 0);
-      const totalAsist = listaJugadores.reduce((acc, j) => acc + Number(j.assists), 0);
-      const totalAmarillas = listaJugadores.reduce((acc, j) => acc + Number(j.yellows), 0);
-      const totalRojas = listaJugadores.reduce((acc, j) => acc + Number(j.reds), 0);
+      const totalMins = statsList.reduce((acc, j) => acc + j.minutes, 0);
+      const totalGoles = statsList.reduce((acc, j) => acc + j.goals, 0);
+      const totalAsist = statsList.reduce((acc, j) => acc + j.assists, 0);
+      const totalAmarillas = statsList.reduce((acc, j) => acc + j.yellows, 0);
+      const totalRojas = statsList.reduce((acc, j) => acc + j.reds, 0);
 
-      // KPI 1 (Económico)
       document.getElementById('kpi1Value').innerText = totalEconomico.toLocaleString('es-ES') + " €";
-      const pctCobro = ((totalEconomico / budget) * 100).toFixed(0);
+      const pct = ((totalEconomico / budget) * 100).toFixed(0);
       document.getElementById('kpi1Sub').innerText = isBase 
-        ? `${pctCobro}% del presupuesto anual cubierto`
-        : `${pctCobro}% del límite salarial consumido`;
+        ? `${pct}% del presupuesto cubierto`
+        : `${pct}% del límite salarial consumido`;
 
-      // KPI 2 (Minutos)
       document.getElementById('kpi2Value').innerText = `${totalMins} min`;
-      const mediaMins = listaJugadores.length > 0 ? Math.round(totalMins / listaJugadores.length) : 0;
-      document.getElementById('kpi2Sub').innerText = `${mediaMins} min de media por jugador`;
+      const mediaMins = statsList.length > 0 ? Math.round(totalMins / statsList.length) : 0;
+      document.getElementById('kpi2Sub').innerText = `${mediaMins} min media por jugador`;
 
-      // KPI 3 (Ofensivo)
       document.getElementById('kpi3Value').innerText = `${totalGoles} / ${totalAsist}`;
       document.getElementById('kpi3Sub').innerText = `${totalGoles + totalAsist} acciones de gol directas`;
 
-      // KPI 4 (Fair Play)
       document.getElementById('kpi4Value').innerText = `${totalAmarillas} 🟨 | ${totalRojas} 🟥`;
-      document.getElementById('kpi4Sub').innerText = `${(totalAmarillas / (listaJugadores.length || 1)).toFixed(1)} tarjetas/jugador`;
+      document.getElementById('kpi4Sub').innerText = `${(totalAmarillas / (statsList.length || 1)).toFixed(1)} tarjetas/jugador`;
 
-      // Sección de Diagnóstico Contextual
       if (isBase) {
         document.getElementById('diagnosisHeader').innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400"></span> Índice de Equidad Formativa';
-        document.getElementById('diagnosisDescription').innerText = 'Detección automática de canteranos con baja participación para asegurar un aprendizaje continuo y equilibrado.';
-        document.getElementById('metricDiagTitle1').innerText = "Minutos recomendados por jugador";
+        document.getElementById('diagnosisDescription').innerText = 'Detección automática en la base de datos de jugadores con poca participación para garantizar el aprendizaje equitativo.';
+        document.getElementById('metricDiagTitle1').innerText = "Minutos promedio esperados";
         document.getElementById('metricDiagVal1').innerText = `${mediaMins} min`;
 
-        const descolgados = listaJugadores.filter(j => j.minutes < (mediaMins * 0.45));
+        const descolgados = statsList.filter(j => j.minutes < (mediaMins * 0.45));
         const val2 = document.getElementById('metricDiagVal2');
         if (descolgados.length > 0) {
           val2.innerText = `⚠️ ${descolgados.length} jugador(es) con muy pocos minutos`;
           val2.className = "text-sm font-semibold text-amber-400 mt-0.5 block";
         } else {
-          val2.innerText = `✅ Reparto de minutos correcto`;
+          val2.innerText = `✅ Reparto de minutos equilibrado`;
           val2.className = "text-sm font-semibold text-emerald-400 mt-0.5 block";
         }
       } else {
         document.getElementById('diagnosisHeader').innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400"></span> Eficiencia Financiera de Plantilla';
-        document.getElementById('diagnosisDescription').innerText = 'Auditoría continua de coste por minuto efectivo y rendimiento para prevenir sobrecostes salariales en la masa del club.';
-        document.getElementById('metricDiagTitle1').innerText = "Coste Medio de Plantilla por Minuto";
-        const costeMinMedio = totalMins > 0 ? (totalEconomico / totalMins) : 0;
-        document.getElementById('metricDiagVal1').innerText = `${costeMinMedio.toFixed(2)} €/min`;
+        document.getElementById('diagnosisDescription').innerText = 'Auditoría en tiempo real de coste por minuto efectivo según los partidos disputados registrados en Supabase.';
+        document.getElementById('metricDiagTitle1').innerText = "Coste Medio por Minuto";
+        const costeMin = totalMins > 0 ? (totalEconomico / totalMins) : 0;
+        document.getElementById('metricDiagVal1').innerText = `${costeMin.toFixed(2)} €/min`;
 
         const val2 = document.getElementById('metricDiagVal2');
-        if (pctCobro > 70) {
+        if (pct > 70) {
           val2.innerText = `🚨 Límite salarial en riesgo (>70%)`;
           val2.className = "text-sm font-semibold text-rose-400 mt-0.5 block";
         } else {
@@ -507,20 +1004,35 @@
         }
       }
 
-      // Rellenar Tabla
+      aplicarFiltrosYBusqueda();
+    }
+
+    // Renderizar la tabla de plantilla con los datos procesados/filtrados
+    function renderizarTablaPlantilla(listaAMostrar, mediaMins, isBase) {
       const tbody = document.getElementById('rosterTableBody');
       tbody.innerHTML = "";
-      document.getElementById('playerCounterBadge').innerText = `${listaJugadores.length} jugadores inscritos`;
+      document.getElementById('playerFilteredBadge').innerText = `${listaAMostrar.length} de ${jugadores.length} jugadores`;
 
-      listaJugadores.forEach((j, index) => {
+      if (listaAMostrar.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="11" class="p-6 text-center text-slate-500">
+              No se han encontrado jugadores con los filtros aplicados.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      listaAMostrar.forEach(j => {
         let badgeEconomico = '';
         let badgeDiag = '';
 
         if (isBase) {
-          // Badges fútbol base
-          if (j.status === 'paid') badgeEconomico = `<span class="text-emerald-400 font-semibold">${j.economy_val}€ (Pagado)</span>`;
-          else if (j.status === 'pending') badgeEconomico = `<span class="text-amber-400 font-semibold">${j.economy_val}€ (Pendiente)</span>`;
-          else badgeEconomico = `<span class="text-slate-400">Beca</span>`;
+          const cuotaVal = Number(j.annual_salary) || 0;
+          if (j.fee_status === 'paid') badgeEconomico = `<span class="text-emerald-500 dark:text-emerald-400 font-semibold">${cuotaVal}€ (Pagado)</span>`;
+          else if (j.fee_status === 'pending') badgeEconomico = `<span class="text-amber-500 dark:text-amber-400 font-semibold">${cuotaVal}€ (Pendiente)</span>`;
+          else badgeEconomico = `<span class="text-slate-400">Beca / Exento</span>`;
 
           if (j.minutes < (mediaMins * 0.45) && mediaMins > 0) {
             badgeDiag = '<span class="px-2 py-0.5 text-[11px] rounded bg-amber-900/40 text-amber-300 border border-amber-800">Dar Minutos</span>';
@@ -528,10 +1040,10 @@
             badgeDiag = '<span class="px-2 py-0.5 text-[11px] rounded bg-emerald-900/40 text-emerald-300 border border-emerald-800">Adecuado</span>';
           }
         } else {
-          // Badges fútbol profesional
-          badgeEconomico = `<span class="text-slate-200 font-semibold">${Number(j.economy_val).toLocaleString('es-ES')} €</span>`;
-          const costeMin = j.minutes > 0 ? (j.economy_val / j.minutes) : j.economy_val;
-          if (costeMin > 45) {
+          const salVal = Number(j.annual_salary) || 0;
+          badgeEconomico = `<span class="font-semibold">${salVal.toLocaleString('es-ES')} €</span>`;
+          const cMin = j.minutes > 0 ? (salVal / j.minutes) : salVal;
+          if (cMin > 45) {
             badgeDiag = '<span class="px-2 py-0.5 text-[11px] rounded bg-rose-900/40 text-rose-300 border border-rose-800">Sobrecoste</span>';
           } else {
             badgeDiag = '<span class="px-2 py-0.5 text-[11px] rounded bg-emerald-900/40 text-emerald-300 border border-emerald-800">Rentable</span>';
@@ -539,30 +1051,361 @@
         }
 
         tbody.innerHTML += `
-          <tr class="hover:bg-slate-800/40 transition">
-            <td class="p-3 font-bold text-slate-400">#${j.dorsal}</td>
-            <td class="p-3 font-semibold text-white">${j.full_name}</td>
+          <tr class="hover:bg-slate-800/40 dark:hover:bg-slate-800/40 light:hover:bg-slate-100 transition group cursor-pointer" onclick="abrirFichaDetalle('${j.id}')">
+            <td class="p-3 font-bold text-slate-400">#${j.dorsal || '-'}</td>
+            <td class="p-3">
+              <span class="font-bold text-emerald-400 hover:text-emerald-300 group-hover:underline flex items-center gap-1.5">
+                ${j.full_name}
+                <span class="no-print text-[10px] text-slate-400 font-normal opacity-0 group-hover:opacity-100 transition">🔍 Ver ficha</span>
+              </span>
+            </td>
             <td class="p-3 text-slate-400">${j.position}</td>
             <td class="p-3 text-right">${badgeEconomico}</td>
-            <td class="p-3 text-right text-slate-300">${j.matches}</td>
-            <td class="p-3 text-right font-semibold text-sky-400">${j.minutes}'</td>
+            <td class="p-3 text-right font-medium">${j.matches}</td>
+            <td class="p-3 text-right font-bold text-sky-400">${j.minutes}'</td>
             <td class="p-3 text-right font-bold text-emerald-400">${j.goals}</td>
-            <td class="p-3 text-right text-slate-300">${j.assists}</td>
+            <td class="p-3 text-right">${j.assists}</td>
             <td class="p-3 text-center text-xs">
               <span class="text-amber-400 font-semibold">${j.yellows}🟨</span>
               <span class="text-rose-500 font-semibold ml-1">${j.reds}🟥</span>
             </td>
             <td class="p-3 text-center">${badgeDiag}</td>
-            <td class="p-3 text-center">
-              <button onclick="eliminarJugador(${index})" class="text-rose-400 hover:text-rose-300 text-xs">Eliminar</button>
+            <td class="p-3 text-center no-print" onclick="event.stopPropagation()">
+              <button onclick="eliminarJugadorSupabase('${j.id}', '${j.full_name}')" class="text-rose-400 hover:text-rose-300 text-xs">Eliminar</button>
             </td>
           </tr>
         `;
       });
     }
 
-    // REGISTRAR ACTA DE PARTIDO (MINUTOS, GOLES, TARJETAS)
-    function registrarEstadisticasPartido(e) {
+    // ========================================================
+    // GENERADOR DE INFORMES EJECUTIVOS (EXPORTAR PDF / IMPRIMIR)
+    // ========================================================
+    function generarInformeEjecutivoPDF() {
+      if (!clubActivo) {
+        alert("Selecciona un club antes de generar el informe");
+        return;
+      }
+
+      const isBase = clubActivo.structure === 'grassroots';
+      const fechaHoy = new Date().toLocaleDateString('es-ES', { 
+        year: 'numeric', month: 'long', day: 'numeric' 
+      });
+
+      // Configurar cabecera formal para la impresión
+      document.getElementById('printClubTitle').innerText = `${clubActivo.name} (${clubActivo.category || 'General'})`;
+      document.getElementById('printDate').innerText = fechaHoy;
+      
+      if (isBase) {
+        document.getElementById('printDocSubtitle').innerText = "BALANCE DE TEMPORADA • FÚTBOL BASE (EQUIDAD FORMATIVA & COBROS DE CUOTA)";
+        document.getElementById('printAuditor').innerText = "Informe emitido para Junta Directiva y Familias";
+      } else {
+        document.getElementById('printDocSubtitle').innerText = "AUDITORÍA EJECUTIVA DE PLANTILLA • CONTROL SALARIAL Y EFICIENCIA DEPORTIVA";
+        document.getElementById('printAuditor').innerText = "Informe para Propiedad y Dirección General";
+      }
+
+      // Lanzar cuadro de impresión nativo del navegador (Guardar como PDF)
+      window.print();
+    }
+
+    // ========================================================
+    // FICHA INDIVIDUAL DE DETALLE & GRÁFICOS (CHART.JS)
+    // ========================================================
+    function abrirFichaDetalle(playerId) {
+      const statsList = obtenerEstadisticasConsolidadas();
+      const jugador = statsList.find(j => j.id === playerId);
+      if (!jugador) return;
+
+      jugadorSeleccionadoActual = jugador;
+      const isBase = clubActivo.structure === 'grassroots';
+
+      document.getElementById('detailPlayerDorsal').innerText = `#${jugador.dorsal || '-'}`;
+      document.getElementById('detailPlayerName').innerText = jugador.full_name;
+      document.getElementById('detailPlayerPosition').innerText = jugador.position;
+      document.getElementById('detailClubName').innerText = clubActivo.name;
+      
+      const ecoVal = Number(jugador.annual_salary) || 0;
+      document.getElementById('detailPlayerEco').innerText = isBase ? `Cuota: ${ecoVal} €` : `Salario: ${ecoVal.toLocaleString('es-ES')} €`;
+
+      const statusBadge = document.getElementById('detailPlayerStatusBadge');
+      if (isBase) {
+        if (jugador.fee_status === 'paid') {
+          statusBadge.innerText = "Cuota al día";
+          statusBadge.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+        } else if (jugador.fee_status === 'pending') {
+          statusBadge.innerText = "Pago Pendiente";
+          statusBadge.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30";
+        } else {
+          statusBadge.innerText = "Beca / Exento";
+          statusBadge.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-slate-500/20 text-slate-300 border border-slate-500/30";
+        }
+      } else {
+        statusBadge.innerText = "Contrato Profesional";
+        statusBadge.className = "px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/20 text-sky-400 border border-sky-500/30";
+      }
+
+      document.getElementById('detailMinutes').innerText = `${jugador.minutes}'`;
+      const avgMins = jugador.matches > 0 ? Math.round(jugador.minutes / jugador.matches) : 0;
+      document.getElementById('detailMinutesAvg').innerText = `${avgMins}' por partido (${jugador.matches} pj)`;
+
+      document.getElementById('detailGoals').innerText = jugador.goals;
+      const goalFreq = jugador.goals > 0 ? Math.round(jugador.minutes / jugador.goals) : 0;
+      document.getElementById('detailGoalsFreq').innerText = goalFreq > 0 ? `Gol cada ${goalFreq}'` : 'Sin goles';
+
+      document.getElementById('detailAssists').innerText = jugador.assists;
+      document.getElementById('detailGoalContribution').innerText = `${jugador.goals + jugador.assists} goles generados`;
+
+      document.getElementById('detailCards').innerText = `${jugador.yellows}🟨  ${jugador.reds}🟥`;
+
+      let score = 7.0;
+      if (jugador.matches > 0) {
+        score += Math.min(jugador.goals * 0.4 + jugador.assists * 0.3, 2.5);
+        if (jugador.yellows > 2) score -= 0.5;
+        if (jugador.reds > 0) score -= 1.0;
+      }
+      document.getElementById('detailScoreValue').innerText = `${score.toFixed(1)} / 10`;
+
+      let scoutNotes = "";
+      if (isBase) {
+        scoutNotes = `${jugador.full_name} demuestra una excelente actitud formativa. `;
+        if (avgMins >= 40) {
+          scoutNotes += "Ha acumulado un volumen idóneo de minutos competitivos, consolidando su confianza en la posición de " + jugador.position.toLowerCase() + ".";
+          document.getElementById('detailDiagnosisTag').innerText = "Formativo Adecuado (Volumen Óptimo)";
+          document.getElementById('detailDiagnosisTag').className = "font-semibold text-emerald-400";
+        } else {
+          scoutNotes += "Requiere mayor protagonismo en los próximos compromisos para acelerar su progresión táctica y evitar descolgarse del ritmo grupal.";
+          document.getElementById('detailDiagnosisTag').innerText = "Plan de Minutos Prioritario";
+          document.getElementById('detailDiagnosisTag').className = "font-semibold text-amber-400";
+        }
+      } else {
+        const cMin = jugador.minutes > 0 ? (ecoVal / jugador.minutes) : ecoVal;
+        scoutNotes = `Auditoría financiera: Coste por minuto activo situado en ${cMin.toFixed(2)} €/min. `;
+        if (cMin > 45) {
+          scoutNotes += "Impacto económico elevado para los minutos computados. Se recomienda evaluar titularidad o salida en ventana de mercado.";
+          document.getElementById('detailDiagnosisTag').innerText = "Sobrecoste Salarial";
+          document.getElementById('detailDiagnosisTag').className = "font-semibold text-rose-400";
+        } else {
+          scoutNotes += "Alta rentabilidad en ratio salario-rendimiento sobre el césped.";
+          document.getElementById('detailDiagnosisTag').innerText = "Rendimiento Rentable";
+          document.getElementById('detailDiagnosisTag').className = "font-semibold text-emerald-400";
+        }
+      }
+      document.getElementById('detailScoutNotes').innerText = scoutNotes;
+
+      const histBody = document.getElementById('detailMatchHistoryBody');
+      histBody.innerHTML = "";
+      if (!jugador.matchList || jugador.matchList.length === 0) {
+        histBody.innerHTML = `<tr><td colspan="5" class="py-3 text-center text-slate-500">Aún no se han registrado partidos para este jugador.</td></tr>`;
+      } else {
+        jugador.matchList.forEach((m, idx) => {
+          histBody.innerHTML += `
+            <tr class="hover:bg-slate-800/30">
+              <td class="py-2 px-2 text-slate-300 font-medium">Jornada ${idx + 1} (${m.match_date || 'Reciente'})</td>
+              <td class="py-2 px-2 text-right font-bold text-sky-400">${m.minutes_played || 0}'</td>
+              <td class="py-2 px-2 text-right font-bold text-emerald-400">${m.goals || 0}</td>
+              <td class="py-2 px-2 text-right text-slate-300">${m.assists || 0}</td>
+              <td class="py-2 px-2 text-center text-xs">
+                <span class="text-amber-400">${m.yellow_cards || 0}🟨</span>
+                <span class="text-rose-500 ml-1">${m.red_cards || 0}🟥</span>
+              </td>
+            </tr>
+          `;
+        });
+      }
+
+      renderizarGraficosJugador(jugador);
+      document.getElementById('playerDetailModal').classList.remove('hidden');
+    }
+
+    function cerrarFichaDetalle() {
+      document.getElementById('playerDetailModal').classList.add('hidden');
+    }
+
+    function renderizarGraficosJugador(jugador) {
+      const isLight = document.documentElement.classList.contains('light');
+      const textColor = isLight ? '#475569' : '#94a3b8';
+      const gridColor = isLight ? '#e2e8f0' : '#1e293b';
+
+      if (chartMinutesInstance) chartMinutesInstance.destroy();
+      if (chartRadarInstance) chartRadarInstance.destroy();
+
+      const labelsPartidos = jugador.matchList && jugador.matchList.length > 0 
+        ? jugador.matchList.map((_, i) => `Jornada ${i + 1}`)
+        : ['J1', 'J2', 'J3', 'J4', 'J5'];
+
+      const dataMinutos = jugador.matchList && jugador.matchList.length > 0
+        ? jugador.matchList.map(m => m.minutes_played || 0)
+        : [0, 0, 0, 0, 0];
+
+      const ctxMinutos = document.getElementById('chartMinutesEvolution').getContext('2d');
+      chartMinutesInstance = new Chart(ctxMinutos, {
+        type: 'line',
+        data: {
+          labels: labelsPartidos,
+          datasets: [{
+            label: 'Minutos Disputados',
+            data: dataMinutos,
+            borderColor: '#38bdf8',
+            backgroundColor: 'rgba(56, 189, 248, 0.15)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.35,
+            pointBackgroundColor: '#0284c7',
+            pointRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 90,
+              grid: { color: gridColor },
+              ticks: { color: textColor, font: { size: 10 } }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { color: textColor, font: { size: 10 } }
+            }
+          }
+        }
+      });
+
+      let atributos = [70, 65, 75, 60, 80];
+      if (jugador.position === 'Delantero') atributos = [88, 85, 60, 50, 82];
+      else if (jugador.position === 'Centrocampista') atributos = [68, 80, 88, 72, 78];
+      else if (jugador.position === 'Defensa') atributos = [45, 55, 70, 88, 85];
+      else if (jugador.position === 'Portero') atributos = [30, 40, 65, 92, 75];
+
+      atributos[0] = Math.min(atributos[0] + (jugador.goals * 3), 98);
+      atributos[1] = Math.min(atributos[1] + (jugador.assists * 3), 98);
+
+      const ctxRadar = document.getElementById('chartRadarSkills').getContext('2d');
+      chartRadarInstance = new Chart(ctxRadar, {
+        type: 'radar',
+        data: {
+          labels: ['Definición', 'Visión & Asist.', 'Técnica & Pase', 'Recuperación', 'Resistencia'],
+          datasets: [{
+            label: 'Atributos Técnicos',
+            data: atributos,
+            backgroundColor: 'rgba(16, 185, 129, 0.25)',
+            borderColor: '#10b981',
+            borderWidth: 2,
+            pointBackgroundColor: '#059669',
+            pointRadius: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            r: {
+              beginAtZero: true,
+              max: 100,
+              grid: { color: gridColor },
+              angleLines: { color: gridColor },
+              pointLabels: {
+                color: textColor,
+                font: { size: 9, weight: 'bold' }
+              },
+              ticks: { display: false }
+            }
+          }
+        }
+      });
+    }
+
+    // ==========================================
+    // OPERACIONES EN SUPABASE (CLUB, JUGADOR, ACTA)
+    // ==========================================
+    async function guardarClubEnSupabase(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSaveClub');
+      btn.innerText = "Guardando en Supabase...";
+      btn.disabled = true;
+
+      const nombre = document.getElementById('inputClubName').value;
+      const estructura = document.getElementById('inputClubStructure').value;
+      const categoria = document.getElementById('inputClubCategory').value;
+      const presupuesto = parseFloat(document.getElementById('inputClubBudget').value) || 0;
+
+      try {
+        const { data: nuevoClub, error } = await supabaseClient
+          .from('clubs')
+          .insert([{
+            name: nombre,
+            structure: estructura,
+            category: categoria,
+            total_budget: presupuesto
+          }])
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        clubes.push(nuevoClub);
+        clubActivo = nuevoClub;
+        renderizarSelectorClubes();
+        await cargarJugadoresYPartidosDelClubActivo();
+        cerrarModal('clubModal');
+        alert(`¡Club "${nombre}" registrado con éxito en Supabase!`);
+      } catch (err) {
+        console.error("Error guardando club:", err);
+        alert("Error al guardar en Supabase: " + err.message);
+      } finally {
+        btn.innerText = "Crear Club en Supabase";
+        btn.disabled = false;
+      }
+    }
+
+    async function guardarJugadorEnSupabase(e) {
+      e.preventDefault();
+      if (!clubActivo) return;
+
+      const btn = document.getElementById('btnSavePlayer');
+      btn.innerText = "Guardando...";
+      btn.disabled = true;
+
+      const nombre = document.getElementById('inputPlayerName').value;
+      const dorsal = parseInt(document.getElementById('inputPlayerDorsal').value) || 1;
+      const posicion = document.getElementById('inputPlayerPos').value;
+      const fee = parseFloat(document.getElementById('inputPlayerFee').value) || 0;
+      const status = document.getElementById('inputPlayerStatus').value;
+
+      try {
+        const { data: nuevoJugador, error } = await supabaseClient
+          .from('players')
+          .insert([{
+            club_id: clubActivo.id,
+            full_name: nombre,
+            dorsal: dorsal,
+            position: posicion,
+            annual_salary: fee,
+            fee_status: status
+          }])
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        jugadores.push(nuevoJugador);
+        actualizarVistasDashboard();
+        actualizarSelectorJugadoresActa();
+        cerrarModal('playerModal');
+        alert(`¡Jugador ${nombre} guardado en Supabase!`);
+      } catch (err) {
+        console.error("Error guardando jugador:", err);
+        alert("Error al guardar en Supabase: " + err.message);
+      } finally {
+        btn.innerText = "Guardar Ficha en Supabase";
+        btn.disabled = false;
+      }
+    }
+
+    async function guardarActaPartidoEnSupabase(e) {
       e.preventDefault();
       const playerId = document.getElementById('matchSelectPlayer').value;
       if (!playerId) {
@@ -570,132 +1413,137 @@
         return;
       }
 
+      const btn = document.getElementById('btnSaveMatch');
+      btn.innerText = "Guardando acta...";
+      btn.disabled = true;
+
       const mins = parseInt(document.getElementById('matchMins').value) || 0;
       const goles = parseInt(document.getElementById('matchGoals').value) || 0;
       const asist = parseInt(document.getElementById('matchAssists').value) || 0;
       const amarillas = parseInt(document.getElementById('matchYellows').value) || 0;
       const rojas = parseInt(document.getElementById('matchReds').value) || 0;
 
-      const player = listaJugadores.find(j => j.id == playerId);
-      if (player) {
-        player.matches += 1;
-        player.minutes += mins;
-        player.goals += goles;
-        player.assists += asist;
-        player.yellows += amarillas;
-        player.reds += rojas;
+      try {
+        const { data: nuevaActa, error } = await supabaseClient
+          .from('match_performances')
+          .insert([{
+            player_id: playerId,
+            minutes_played: mins,
+            goals: goles,
+            assists: asist,
+            yellow_cards: amarillas,
+            red_cards: rojas
+          }])
+          .select()
+          .single();
 
-        document.getElementById('matchLogForm').reset();
+        if (error) throw error;
+
+        actasPartidos.push(nuevaActa);
         actualizarVistasDashboard();
-        alert(`Estadísticas añadidas al expediente de ${player.full_name}`);
+        e.target.reset();
+        alert("¡Acta guardada permanentemente en Supabase!");
+      } catch (err) {
+        console.error("Error guardando acta:", err);
+        alert("Error al guardar en Supabase: " + err.message);
+      } finally {
+        btn.innerText = "+ Guardar en la Nube";
+        btn.disabled = false;
       }
     }
 
-    // GESTIÓN DE MODALES Y FORMULARIOS
-    function cambiarClubDialog() {
-      document.getElementById('registrationModal').classList.remove('hidden');
-      cambiarTabRegistro('club');
+    async function eliminarJugadorSupabase(playerId, nombre) {
+      if (!confirm(`¿Deseas eliminar a ${nombre}? Se borrarán también sus partidos registrados.`)) return;
+
+      try {
+        const { error } = await supabaseClient
+          .from('players')
+          .delete()
+          .eq('id', playerId);
+
+        if (error) throw error;
+
+        jugadores = jugadores.filter(j => j.id !== playerId);
+        actasPartidos = actasPartidos.filter(m => m.player_id !== playerId);
+        actualizarVistasDashboard();
+        actualizarSelectorJugadoresActa();
+      } catch (err) {
+        console.error("Error al eliminar:", err);
+        alert("Error al eliminar en Supabase: " + err.message);
+      }
     }
 
-    function abrirModalInscripcionJugador() {
-      document.getElementById('modalCurrentClubName').innerText = clubActivo.name;
-      const isBase = clubActivo.structure === 'grassroots';
-      document.getElementById('modalEcoLabel').innerText = isBase ? "Cuota Anual (€)" : "Salario Anual (€)";
-      document.getElementById('modalPlayerFee').value = isBase ? 380 : 35000;
-      document.getElementById('modalStatusLabel').innerText = isBase ? "Estado de Cuota" : "Estado Contrato";
-
-      const selectStatus = document.getElementById('modalPlayerStatus');
-      selectStatus.innerHTML = isBase 
-        ? '<option value="paid">Pagada / Al día</option><option value="pending">Pendiente</option><option value="exempt">Beca / Exento</option>'
-        : '<option value="contract">Contrato en Vigor</option><option value="cedido">Cedido</option>';
-
-      document.getElementById('registrationModal').classList.remove('hidden');
-      cambiarTabRegistro('player');
+    // ==========================================
+    // UTILIDADES DE INTERFAZ & MODALES
+    // ==========================================
+    function renderizarSelectorClubes() {
+      const select = document.getElementById('clubSelectorDropdown');
+      select.innerHTML = "";
+      clubes.forEach(c => {
+        const selected = clubActivo && clubActivo.id === c.id ? "selected" : "";
+        select.innerHTML += `<option value="${c.id}" ${selected}>${c.name} (${c.category || 'General'})</option>`;
+      });
     }
 
-    function cerrarModalRegistro() {
-      document.getElementById('registrationModal').classList.add('hidden');
+    async function cambiarClubSeleccionado(clubId) {
+      const found = clubes.find(c => c.id === clubId);
+      if (found) {
+        clubActivo = found;
+        await cargarJugadoresYPartidosDelClubActivo();
+      }
     }
 
-    function cambiarTabRegistro(tab) {
-      const formClub = document.getElementById('formRegisterClub');
-      const formPlayer = document.getElementById('formRegisterPlayerDirect');
-      const btnClub = document.getElementById('tabClubBtn');
-      const btnPlayer = document.getElementById('tabPlayerBtn');
+    function actualizarSelectorJugadoresActa() {
+      const select = document.getElementById('matchSelectPlayer');
+      select.innerHTML = '<option value="">-- Selecciona jugador --</option>';
+      jugadores.forEach(j => {
+        select.innerHTML += `<option value="${j.id}">#${j.dorsal || '-'} - ${j.full_name} (${j.position})</option>`;
+      });
+    }
 
-      if (tab === 'club') {
-        formClub.classList.remove('hidden');
-        formPlayer.classList.add('hidden');
-        btnClub.className = "py-2 rounded-lg bg-emerald-500 text-slate-950 transition font-bold";
-        btnPlayer.className = "py-2 rounded-lg text-slate-400 hover:text-white transition";
+    function actualizarOpcionesCategorias() {
+      const estructura = document.getElementById('inputClubStructure').value;
+      const selectCat = document.getElementById('inputClubCategory');
+      const labelBudget = document.getElementById('inputBudgetLabel');
+      const inputBudget = document.getElementById('inputClubBudget');
+      
+      selectCat.innerHTML = "";
+      const lista = estructura === 'grassroots' ? CATEGORIAS_BASE : CATEGORIAS_PRO;
+      lista.forEach(cat => {
+        selectCat.innerHTML += `<option value="${cat}">${cat}</option>`;
+      });
+
+      if (estructura === 'grassroots') {
+        labelBudget.innerText = "Presupuesto Temporada Escuela (€)";
+        inputBudget.value = 18000;
       } else {
-        formClub.classList.add('hidden');
-        formPlayer.classList.remove('hidden');
-        btnPlayer.className = "py-2 rounded-lg bg-sky-500 text-slate-950 transition font-bold";
-        btnClub.className = "py-2 rounded-lg text-slate-400 hover:text-white transition";
+        labelBudget.innerText = "Límite / Masa Salarial (€)";
+        inputBudget.value = 350000;
       }
     }
 
-    // GUARDAR NUEVO CLUB
-    function guardarNuevoClub(e) {
-      e.preventDefault();
-      const nombre = document.getElementById('newClubName').value;
-      const tipo = document.getElementById('newClubType').value;
-      const categoria = document.getElementById('newClubCategory').value;
-      const presupuesto = parseFloat(document.getElementById('newClubBudget').value) || 0;
-
-      const nuevoClub = {
-        id: "club_" + Date.now(),
-        name: nombre,
-        structure: tipo,
-        category: categoria,
-        total_budget: presupuesto
-      };
-
-      clubesGuardados.push(nuevoClub);
-      seleccionarClub(nuevoClub);
-      document.getElementById('formRegisterClub').reset();
-      alert(`¡Club "${nombre}" registrado con éxito!`);
+    function abrirModalNuevoClub() {
+      document.getElementById('clubModal').classList.remove('hidden');
     }
 
-    // GUARDAR NUEVO JUGADOR DESDE MODAL
-    function guardarJugadorDesdeModal(e) {
-      e.preventDefault();
-      const nombre = document.getElementById('modalPlayerName').value;
-      const dorsal = parseInt(document.getElementById('modalPlayerDorsal').value) || (listaJugadores.length + 1);
-      const posicion = document.getElementById('modalPlayerPos').value;
-      const ecoVal = parseFloat(document.getElementById('modalPlayerFee').value) || 0;
-      const status = document.getElementById('modalPlayerStatus').value;
+    function abrirModalNuevoJugador() {
+      if (!clubActivo) return;
+      document.getElementById('playerModalSub').innerText = `Inscribiendo en: ${clubActivo.name}`;
+      const isBase = clubActivo.structure === 'grassroots';
+      document.getElementById('inputPlayerFeeLabel').innerText = isBase ? "Cuota Anual (€)" : "Salario Anual (€)";
+      document.getElementById('inputPlayerFee').value = isBase ? 380 : 35000;
+      document.getElementById('inputPlayerStatusLabel').innerText = isBase ? "Estado de Cuota" : "Estado Contrato";
 
-      const nuevoJugador = {
-        id: "p_" + Date.now(),
-        dorsal: dorsal,
-        full_name: nombre,
-        position: posicion,
-        economy_val: ecoVal,
-        status: status,
-        matches: 0,
-        minutes: 0,
-        goals: 0,
-        assists: 0,
-        yellows: 0,
-        reds: 0
-      };
+      const select = document.getElementById('inputPlayerStatus');
+      select.innerHTML = isBase 
+        ? '<option value="paid">Pagado</option><option value="pending">Pendiente</option><option value="exempt">Beca / Exento</option>'
+        : '<option value="contract">Contrato en vigor</option><option value="cedido">Cedido</option>';
 
-      listaJugadores.push(nuevoJugador);
-      document.getElementById('formRegisterPlayerDirect').reset();
-      cerrarModalRegistro();
-      actualizarSelectJugadoresPartido();
-      actualizarVistasDashboard();
-      alert(`¡Jugador ${nombre} inscrito en ${clubActivo.name}!`);
+      document.getElementById('playerModal').classList.remove('hidden');
     }
 
-    function eliminarJugador(index) {
-      if (confirm(`¿Eliminar al jugador ${listaJugadores[index].full_name}?`)) {
-        listaJugadores.splice(index, 1);
-        actualizarSelectJugadoresPartido();
-        actualizarVistasDashboard();
-      }
+    function cerrarModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
     }
   </script>
 </body>
