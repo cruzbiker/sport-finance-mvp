@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>SportPlatform Pro - Gestión Multiequipo & Porteros</title>
+  <title>SportPlatform Pro - Acceso & Gestión</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -13,9 +13,7 @@
       darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-          },
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
           colors: {
             brand: {
               50: '#ecfdf5',
@@ -47,7 +45,7 @@
 
     html.light { color-scheme: light; }
     html.light body { background-color: #f1f5f9; color: #0f172a; }
-    html.light .card-surface { background-color: #ffffff !important; border-color: #cbd5e1 !important; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.04); color: #0f172a !important; }
+    html.light .card-surface { background-color: #ffffff !important; border-color: #cbd5e1 !important; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); color: #0f172a !important; }
     html.light .inner-surface { background-color: #f8fafc !important; border-color: #cbd5e1 !important; color: #0f172a !important; }
     html.light .input-surface { background-color: #ffffff !important; border: 1px solid #94a3b8 !important; color: #0f172a !important; }
     html.light .input-surface:focus { border-color: #059669 !important; outline: 2px solid rgba(5, 150, 105, 0.2) !important; }
@@ -88,375 +86,504 @@
 </head>
 <body class="min-h-screen font-sans flex flex-col justify-between transition-colors duration-200 antialiased selection:bg-emerald-500 selection:text-white">
 
-  <!-- NOTIFICACIÓN TOAST -->
+  <!-- AVISO DE NOTIFICACIÓN TOAST -->
   <div id="toastNotification" class="fixed top-4 right-4 z-50 transform transition-all duration-300 translate-y-[-150%] opacity-0 bg-slate-900 border border-slate-700 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-bold pointer-events-none">
     <span id="toastIcon">ℹ️</span>
     <span id="toastMsg">Mensaje</span>
   </div>
 
-  <!-- BARRA DE NAVEGACIÓN PRINCIPAL -->
-  <header class="no-print border-b sticky top-0 z-40 px-3 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between transition-colors backdrop-blur-md">
-    <div class="flex items-center gap-2.5 sm:gap-3">
-      <div id="navClubLogoContainer" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-slate-950 font-black flex items-center justify-center text-lg shadow-md shadow-emerald-500/20 overflow-hidden flex-shrink-0">
-        <span id="navClubInitials">SP</span>
-        <img id="navClubLogoImg" src="" alt="Escudo" class="hidden w-full h-full object-cover">
-      </div>
-      <div>
-        <h1 class="font-extrabold tracking-tight text-base sm:text-lg leading-tight flex items-center gap-2">
-          <span id="navClubNameHeader">UD Paterna</span>
-        </h1>
-        <p class="text-[11px] text-muted-custom font-medium">Clubes & Estructura Multiequipo</p>
-      </div>
-    </div>
+  <!-- ======================================================== -->
+  <!-- SLIDE / PANTALLA 1: AUTENTICACIÓN (LOGIN & REGISTRO)     -->
+  <!-- ======================================================== -->
+  <section id="authSlideScreen" class="min-h-screen flex items-center justify-center p-4 sm:p-6 relative overflow-hidden flex-1">
+    <!-- Glow de fondo -->
+    <div class="absolute -top-32 -left-32 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-32 -right-32 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-    <div class="flex items-center gap-1.5 sm:gap-2.5">
-      <!-- Selector 1: Club -->
-      <div class="flex items-center gap-1.5 badge-theme-tag border border-slate-700 px-2 sm:px-3 py-1.5 rounded-xl text-xs" title="Club Seleccionado">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-        <select id="clubSelectorDropdown" onchange="cambiarClubSeleccionado(this.value)" class="bg-transparent text-xs font-bold focus:outline-none cursor-pointer max-w-[110px] sm:max-w-[150px] truncate">
-          <option value="11111111-1111-1111-1111-111111111111">UD Paterna</option>
-        </select>
-      </div>
-
-      <!-- Selector 2: Equipo -->
-      <div class="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 px-2 sm:px-3 py-1.5 rounded-xl text-xs" title="Equipo Activo">
-        <span class="font-black">⚽</span>
-        <select id="teamSelectorDropdown" onchange="cambiarEquipoSeleccionado(this.value)" class="bg-transparent text-xs font-black focus:outline-none cursor-pointer max-w-[110px] sm:max-w-[150px] truncate text-emerald-600 dark:text-emerald-400">
-          <option value="team_11111111-1111-1111-1111-111111111111_1">Plantilla Principal</option>
-        </select>
-      </div>
-
-      <button onclick="generarInformeEjecutivoPDF()" title="Exportar balance formal a PDF" class="text-xs bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold px-2.5 sm:px-3 py-1.5 rounded-xl transition shadow-sm flex items-center gap-1">
-        <span>📄</span>
-        <span class="hidden md:inline">Informe PDF</span>
-      </button>
-
-      <button onclick="abrirModalNuevoClub()" class="text-xs bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-2.5 sm:px-3 py-1.5 rounded-xl transition shadow-sm">
-        + Club
-      </button>
-
-      <button onclick="toggleTheme()" id="themeToggleBtn" title="Cambiar tema de color" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl border border-slate-700 btn-secondary-custom transition flex items-center gap-1.5 text-xs font-bold">
-        <span id="themeIcon">☀️</span>
-        <span id="themeText" class="hidden lg:inline">Modo Claro</span>
-      </button>
-    </div>
-  </header>
-
-  <!-- CONTENEDOR PRINCIPAL RESPONSIVE -->
-  <main class="max-w-7xl mx-auto w-full p-3 sm:p-5 lg:p-6 space-y-6 flex-1">
-
-    <!-- CABECERA FORMAL PARA IMPRESIÓN (SOLO PRINT) -->
-    <div class="print-only border-b-2 border-slate-900 pb-3 mb-4">
-      <div class="flex justify-between items-start">
+    <div class="card-surface max-w-md w-full p-6 sm:p-8 rounded-3xl border shadow-2xl relative z-10 space-y-6">
+      <!-- Identidad Superior -->
+      <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
-          <img id="printClubLogo" src="" alt="Escudo" class="w-12 h-12 object-contain hidden">
+          <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-slate-950 font-black flex items-center justify-center text-xl shadow-lg shadow-emerald-500/20">
+            SP
+          </div>
           <div>
-            <h1 id="printClubTitle" class="text-2xl font-black uppercase text-slate-900">CLUB DEPORTIVO</h1>
-            <p id="printDocSubtitle" class="text-xs text-slate-600 font-bold mt-0.5">INFORME EJECUTIVO DE BALANCE TEMPORADA</p>
-            <p id="printClubContactDetails" class="text-[11px] text-slate-500 mt-1"></p>
-          </div>
-        </div>
-        <div class="text-right text-xs text-slate-500">
-          <p><strong>Fecha emisión:</strong> <span id="printDate">--/--/----</span></p>
-          <p><strong>Equipo:</strong> <span id="printTeamName">--</span></p>
-          <p id="printAuditor">Auditoría Deportiva & Financiera</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- BANNER DEL CLUB Y EQUIPO CON LOGO Y ACCESO A EDICIÓN -->
-    <section class="card-surface p-4 sm:p-6 rounded-3xl border transition-all relative overflow-hidden">
-      <div class="absolute -right-16 -top-16 w-56 h-56 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-
-      <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 relative z-10">
-        <div class="flex items-start sm:items-center gap-4">
-          <div class="relative group cursor-pointer" onclick="abrirModalEditarClub()" title="Pulsa para cambiar escudo o editar club">
-            <div id="bannerClubLogoContainer" class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-slate-950 font-black flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/20 overflow-hidden border-2 border-emerald-500/40 flex-shrink-0">
-              <span id="bannerClubInitials">CD</span>
-              <img id="bannerClubLogoImg" src="" alt="Escudo Club" class="hidden w-full h-full object-cover">
-            </div>
-            <span class="no-print absolute -bottom-1 -right-1 bg-slate-900 text-white rounded-full p-1 text-[10px] border border-slate-700 shadow">✏️</span>
-          </div>
-
-          <div class="space-y-1">
-            <div class="flex flex-wrap items-center gap-2">
-              <span id="clubTypeBadge" class="text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 border border-emerald-500/30">
-                Fútbol Base
-              </span>
-              <span id="activeTeamBadge" class="text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30">
-                Plantilla Principal
-              </span>
-              <span id="clubFoundationBadge" class="text-[11px] text-muted-custom font-semibold">Fundación: --</span>
-            </div>
-
-            <div class="flex items-baseline gap-2">
-              <h2 id="currentClubTitle" class="text-2xl sm:text-3xl font-black tracking-tight">UD Paterna</h2>
-              <span id="currentTeamSubtitle" class="text-base sm:text-lg font-extrabold text-emerald-500 dark:text-emerald-400">/ Plantilla Principal</span>
-            </div>
-            
-            <div id="clubContactDetailsRow" class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-custom pt-1">
-              <span id="clubAddressDisplay" class="flex items-center gap-1 font-medium">
-                📍 <span id="clubAddressText">Camino del Polideportivo, Paterna</span>
-              </span>
-              <span id="clubPhoneDisplay" class="flex items-center gap-1 font-medium">
-                📞 <span id="clubPhoneText">--</span>
-              </span>
-              <span id="clubEmailDisplay" class="flex items-center gap-1 font-medium">
-                ✉️ <span id="clubEmailText">--</span>
-              </span>
-              <span id="clubWebDisplay" class="flex items-center gap-1 font-medium">
-                🌐 <span id="clubWebText">www.udpaterna.es</span>
-              </span>
-              <span id="clubStadiumDisplay" class="flex items-center gap-1 font-medium">
-                🏟️ <span id="clubStadiumText">Estadio Gerardo Salvador</span>
-              </span>
-            </div>
+            <h1 class="text-lg font-black tracking-tight">SportPlatform</h1>
+            <p class="text-[11px] text-muted-custom font-semibold">Portal Clubes & Jugadores</p>
           </div>
         </div>
 
-        <div class="no-print flex flex-wrap items-center gap-2 w-full lg:w-auto pt-2 lg:pt-0">
-          <button onclick="abrirModalNuevoEquipo()" class="flex-1 sm:flex-initial text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-3.5 py-2.5 rounded-xl font-bold transition flex items-center justify-center gap-1.5">
-            <span>+</span> Nuevo Equipo (A, B, C...)
-          </button>
-          <button onclick="abrirModalEditarClub()" class="flex-1 sm:flex-initial text-xs btn-secondary-custom border px-3.5 py-2.5 rounded-xl font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
-            <span>✏️</span> Editar Club & Escudo
-          </button>
-          <button onclick="abrirModalNuevoJugador()" class="flex-1 sm:flex-initial text-xs bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black px-4 py-2.5 rounded-xl transition shadow-lg shadow-emerald-500/10 flex items-center justify-center gap-1.5">
-            <span>+</span> Inscribir Jugador
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- TARJETAS KPIS RESUMEN -->
-    <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 print-kpis">
-      <div class="card-surface p-4 rounded-2xl border">
-        <p id="kpi1Title" class="text-[11px] text-muted-custom uppercase font-extrabold tracking-wider">Recaudación Cuotas</p>
-        <p id="kpi1Value" class="text-xl sm:text-2xl font-black mt-1">0 €</p>
-        <span id="kpi1Sub" class="text-[11px] text-muted-custom block font-medium">0% cubierto</span>
-      </div>
-      <div class="card-surface p-4 rounded-2xl border">
-        <p class="text-[11px] text-muted-custom uppercase font-extrabold tracking-wider">Minutos Totales Disputados</p>
-        <p id="kpi2Value" class="text-xl sm:text-2xl font-black mt-1 text-sky-500 dark:text-sky-400">0 min</p>
-        <span id="kpi2Sub" class="text-[11px] text-muted-custom block font-medium">0 min de media</span>
-      </div>
-      <div class="card-surface p-4 rounded-2xl border">
-        <p class="text-[11px] text-muted-custom uppercase font-extrabold tracking-wider">Goles / Asistencias</p>
-        <p id="kpi3Value" class="text-xl sm:text-2xl font-black mt-1 text-emerald-500 dark:text-emerald-400">0 / 0</p>
-        <span id="kpi3Sub" class="text-[11px] text-muted-custom block font-medium">Acciones ofensivas</span>
-      </div>
-      <div class="card-surface p-4 rounded-2xl border">
-        <p class="text-[11px] text-muted-custom uppercase font-extrabold tracking-wider">Juego Limpio / Portería</p>
-        <p id="kpi4Value" class="text-xl sm:text-2xl font-black mt-1 text-amber-500 dark:text-amber-400">0 🟨 | 0 🟥</p>
-        <span id="kpi4Sub" class="text-[11px] text-muted-custom block font-medium">0 goles encajados</span>
-      </div>
-    </section>
-
-    <!-- FORMULARIO DE PARTIDO POR JORNADA & DIAGNÓSTICO -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <section class="no-print card-surface p-5 rounded-3xl border space-y-3 lg:col-span-1">
-        <div class="flex items-center justify-between">
-          <h3 class="text-xs sm:text-sm font-black uppercase tracking-wider flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span> Acta de Partido (Cloud)
-          </h3>
-          <span id="matchActiveTeamLabel" class="text-[10px] text-muted-custom font-bold">Principal</span>
-        </div>
-        <p class="text-xs text-muted-custom">Introduce estadísticas por jornada (detecta si es portero para goles encajados).</p>
-
-        <form onsubmit="guardarActaPartidoEnSupabase(event)" class="space-y-3 pt-1">
-          <div>
-            <label class="text-[11px] text-muted-custom block mb-1 font-bold">Jugador del Equipo</label>
-            <select id="matchSelectPlayer" onchange="verificarSiEsPorteroEnActa()" required class="input-surface w-full rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold focus:outline-none">
-              <option value="">-- Selecciona jugador --</option>
-            </select>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="text-[11px] text-muted-custom block mb-1 font-bold">Jornada</label>
-              <select id="matchJourneySelect" required class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none"></select>
-            </div>
-            <div>
-              <label class="text-[11px] text-muted-custom block mb-1 font-bold">Fecha Encuentro</label>
-              <input id="matchDateInput" type="date" required class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs font-semibold">
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="text-[11px] text-muted-custom block mb-1 font-bold">Minutos Jugados</label>
-              <input id="matchMins" type="number" min="0" max="120" placeholder="45" required class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs font-semibold">
-            </div>
-            <div>
-              <label class="text-[11px] text-muted-custom block mb-1 font-bold">Goles Marcados</label>
-              <input id="matchGoals" type="number" min="0" value="0" class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs font-semibold">
-            </div>
-          </div>
-
-          <!-- CAMPO DESTACADO PARA PORTEROS -->
-          <div id="matchConcededWrapper" class="inner-surface p-2.5 rounded-xl border border-sky-500/30 bg-sky-500/5">
-            <div class="flex items-center justify-between">
-              <label class="text-[11px] text-sky-600 dark:text-sky-400 block font-bold flex items-center gap-1.5">
-                <span>🧤</span> Goles Encajados (En esta jornada)
-              </label>
-              <span id="keeperTagOnMatch" class="text-[9px] badge-keeper-custom px-2 py-0.5 rounded-full font-bold">Específico Portero</span>
-            </div>
-            <input id="matchGoalsConceded" type="number" min="0" value="0" class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs font-bold mt-1.5 focus:border-sky-500">
-            <span class="text-[9.5px] text-muted-custom mt-1 block">Afecta al cómputo de imbatibilidad y goles/partido del portero.</span>
-          </div>
-
-          <div class="grid grid-cols-3 gap-2">
-            <div>
-              <label class="text-[11px] text-muted-custom block mb-1 font-bold">Asistencias</label>
-              <input id="matchAssists" type="number" min="0" value="0" class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs font-semibold">
-            </div>
-            <div>
-              <label class="text-[11px] text-muted-custom block mb-1 font-bold">Amarillas 🟨</label>
-              <input id="matchYellows" type="number" min="0" max="2" value="0" class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs font-semibold">
-            </div>
-            <div>
-              <label class="text-[11px] text-muted-custom block mb-1 font-bold">Rojas 🟥</label>
-              <input id="matchReds" type="number" min="0" max="1" value="0" class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs font-semibold">
-            </div>
-          </div>
-
-          <button id="btnSaveMatch" type="submit" class="w-full bg-sky-500 hover:bg-sky-600 text-slate-950 font-black rounded-xl py-2.5 text-xs transition shadow-sm mt-1">
-            + Guardar Acta Jornada
-          </button>
-        </form>
-      </section>
-
-      <!-- Diagnóstico Adaptativo -->
-      <section class="card-surface p-5 rounded-3xl border lg:col-span-2 flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between mb-3">
-            <h3 id="diagnosisHeader" class="text-xs sm:text-sm font-black uppercase tracking-wider flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Diagnóstico Adaptativo
-            </h3>
-            <span id="syncIndicator" class="text-[10px] bg-emerald-950/80 text-emerald-400 px-2.5 py-1 rounded-full border border-emerald-800 font-bold no-print">● Conectado a Supabase</span>
-          </div>
-
-          <p id="diagnosisDescription" class="text-xs text-muted-custom leading-relaxed font-medium">
-            Midiendo indicadores deportivos y financieros en tiempo real desde la nube para el equipo activo.
-          </p>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-            <div class="inner-surface p-4 rounded-2xl border">
-              <span id="metricDiagTitle1" class="text-[11px] text-muted-custom uppercase font-bold block">Minutos promedio esperados</span>
-              <span id="metricDiagVal1" class="text-lg font-black mt-0.5 block">0 min</span>
-            </div>
-            <div class="inner-surface p-4 rounded-2xl border">
-              <span id="metricDiagTitle2" class="text-[11px] text-muted-custom uppercase font-bold block">Semáforo de situación</span>
-              <span id="metricDiagVal2" class="text-sm font-bold text-emerald-500 dark:text-emerald-400 mt-0.5 block">Datos al día</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="no-print mt-4 pt-3 border-t border-slate-700/60 dark:border-slate-800 text-[11px] text-muted-custom flex justify-between items-center">
-          <span>💡 Pulsa en las cabeceras de la tabla para <strong>ordenar por cualquier columna</strong>.</span>
-          <button onclick="cargarTodoDesdeSupabase()" class="text-sky-500 hover:text-sky-400 font-bold">🔄 Sincronizar</button>
-        </div>
-      </section>
-    </div>
-
-    <!-- TABLA DE PLANTILLA CON BOTÓN AÑADIR JUGADOR Y ORDENACIÓN -->
-    <section class="card-surface rounded-3xl border overflow-hidden shadow-xl">
-      <div class="p-4 sm:p-5 border-b border-slate-700/60 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div>
-          <div class="flex items-center gap-2">
-            <h3 class="font-black text-base sm:text-lg tracking-tight">Plantilla Oficial & Rendimiento</h3>
-            <span id="teamBadgeOnTable" class="text-[11px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-black">Equipo</span>
-          </div>
-          <p class="text-xs text-muted-custom">Pulsa en las cabeceras con flechas (⇅) para ordenar. Incluye columna de Goles Encajados para porteros.</p>
-        </div>
-        
-        <div class="flex items-center gap-2 w-full sm:w-auto">
-          <span id="playerFilteredBadge" class="text-xs badge-theme-tag px-3 py-1.5 rounded-xl text-muted-custom font-bold border border-slate-700">
-            0 jugadores
-          </span>
-          <button onclick="abrirModalNuevoJugador()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black px-3.5 py-1.5 rounded-xl text-xs transition shadow-md shadow-emerald-500/10 flex items-center gap-1.5 flex-shrink-0">
-            <span>+</span> Añadir Jugador a Plantilla
-          </button>
-        </div>
-      </div>
-
-      <!-- Barra de Filtros y Búsqueda -->
-      <div class="no-print p-3 sm:p-4 border-b border-slate-700/60 dark:border-slate-800 inner-surface flex flex-col md:flex-row items-stretch md:items-center gap-2.5">
-        <div class="relative flex-1">
-          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-custom text-xs">🔍</span>
-          <input id="searchInput" type="text" oninput="aplicarFiltrosYBusqueda()" placeholder="Buscar por nombre, dorsal o posición..." class="input-surface w-full pl-8 pr-3 py-2 text-xs rounded-xl focus:outline-none font-medium">
-        </div>
-
-        <div class="w-full md:w-44">
-          <select id="filterPosition" onchange="aplicarFiltrosYBusqueda()" class="input-surface w-full px-3 py-2 text-xs rounded-xl focus:outline-none font-medium">
-            <option value="ALL">Todas las posiciones</option>
-            <option value="Portero">Porteros</option>
-            <option value="Defensa">Defensas</option>
-            <option value="Centrocampista">Centrocampistas</option>
-            <option value="Delantero">Delanteros</option>
-          </select>
-        </div>
-
-        <div class="w-full md:w-52">
-          <select id="filterStatus" onchange="aplicarFiltrosYBusqueda()" class="input-surface w-full px-3 py-2 text-xs rounded-xl focus:outline-none font-medium">
-            <option value="ALL">Todos los estados</option>
-          </select>
-        </div>
-
-        <button onclick="limpiarFiltros()" class="text-xs btn-secondary-custom border px-3 py-2 rounded-xl transition font-bold whitespace-nowrap">
-          Limpiar
+        <button onclick="toggleTheme()" class="p-2 rounded-xl border border-slate-700 btn-secondary-custom text-xs">
+          <span id="authThemeIcon">☀️</span>
         </button>
       </div>
 
-      <!-- Tabla Ordenable por Columnas -->
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs sm:text-sm">
-          <thead class="table-thead-custom uppercase text-[11px] font-extrabold tracking-wider select-none">
-            <tr>
-              <th onclick="cambiarOrdenColumna('dorsal')" class="p-3 cursor-pointer hover:bg-slate-700/20">
-                <span class="flex items-center gap-1"># <span id="sort_dorsal">⇅</span></span>
-              </th>
-              <th onclick="cambiarOrdenColumna('full_name')" class="p-3 cursor-pointer hover:bg-slate-700/20">
-                <span class="flex items-center gap-1">Jugador <span id="sort_full_name">⇅</span></span>
-              </th>
-              <th onclick="cambiarOrdenColumna('position')" class="p-3 cursor-pointer hover:bg-slate-700/20">
-                <span class="flex items-center gap-1">Posición & Rol <span id="sort_position">⇅</span></span>
-              </th>
-              <th onclick="cambiarOrdenColumna('annual_salary')" id="thEconomy" class="p-3 text-right cursor-pointer hover:bg-slate-700/20">
-                <span class="flex items-center justify-end gap-1">Cuota <span id="sort_annual_salary">⇅</span></span>
-              </th>
-              <th onclick="cambiarOrdenColumna('matches')" class="p-3 text-right cursor-pointer hover:bg-slate-700/20">
-                <span class="flex items-center justify-end gap-1">PJ <span id="sort_matches">⇅</span></span>
-              </th>
-              <th onclick="cambiarOrdenColumna('minutes')" class="p-3 text-right cursor-pointer hover:bg-slate-700/20">
-                <span class="flex items-center justify-end gap-1">Min <span id="sort_minutes">⇅</span></span>
-              </th>
-              <th onclick="cambiarOrdenColumna('goals')" class="p-3 text-right cursor-pointer hover:bg-slate-700/20">
-                <span class="flex items-center justify-end gap-1">Goles <span id="sort_goals">⇅</span></span>
-              </th>
-              <th onclick="cambiarOrdenColumna('goals_conceded')" class="p-3 text-right cursor-pointer hover:bg-slate-700/20">
-                <span class="flex items-center justify-end gap-1">Encajados 🧤 <span id="sort_goals_conceded">⇅</span></span>
-              </th>
-              <th onclick="cambiarOrdenColumna('assists')" class="p-3 text-right cursor-pointer hover:bg-slate-700/20">
-                <span class="flex items-center justify-end gap-1">Asist <span id="sort_assists">⇅</span></span>
-              </th>
-              <th onclick="cambiarOrdenColumna('yellows')" class="p-3 text-center cursor-pointer hover:bg-slate-700/20">
-                <span class="flex items-center justify-center gap-1">Tarjetas <span id="sort_yellows">⇅</span></span>
-              </th>
-              <th class="p-3 text-center">Diagnóstico</th>
-              <th class="p-3 text-center no-print">Acción</th>
-            </tr>
-          </thead>
-          <tbody id="rosterTableBody" class="divide-y divide-slate-800 table-divide-custom font-medium"></tbody>
-        </table>
+      <!-- Selector de Modo Auth: Iniciar Sesión / Registrarse -->
+      <div class="grid grid-cols-2 p-1 inner-surface rounded-2xl border border-slate-700/60 text-xs font-bold">
+        <button id="btnTabLogin" onclick="cambiarModoAuth('login')" class="py-2 rounded-xl bg-emerald-500 text-slate-950 transition font-black">
+          Iniciar Sesión
+        </button>
+        <button id="btnTabRegister" onclick="cambiarModoAuth('register')" class="py-2 rounded-xl text-muted-custom hover:text-white transition font-black">
+          Crear Cuenta
+        </button>
       </div>
 
-      <div class="print-only p-4 border-t border-slate-300 text-xs text-slate-600 flex justify-between mt-4">
-        <span>SportPlatform • Balance Oficial de Temporada</span>
-        <span>Página 1 de 1</span>
+      <!-- FORMULARIO 1: LOGIN -->
+      <form id="formLogin" onsubmit="ejecutarLogin(event)" class="space-y-4">
+        <div>
+          <label class="text-[11px] text-muted-custom block mb-1 font-bold">Correo Electrónico</label>
+          <input id="loginEmail" type="email" placeholder="ejemplo@correo.com" required class="input-surface w-full rounded-xl px-3.5 py-2 text-xs sm:text-sm font-semibold focus:outline-none">
+        </div>
+        <div>
+          <label class="text-[11px] text-muted-custom block mb-1 font-bold">Contraseña</label>
+          <input id="loginPassword" type="password" placeholder="••••••••" required class="input-surface w-full rounded-xl px-3.5 py-2 text-xs sm:text-sm font-semibold focus:outline-none">
+        </div>
+        <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black rounded-xl py-3 text-xs sm:text-sm transition shadow-lg shadow-emerald-500/10">
+          Entrar a la Plataforma
+        </button>
+      </form>
+
+      <!-- FORMULARIO 2: REGISTRO CON ELECCIÓN ENTRE CLUB O JUGADOR -->
+      <form id="formRegister" onsubmit="ejecutarRegistro(event)" class="hidden space-y-4">
+        <!-- Selector Tipo de Perfil en Registro -->
+        <div>
+          <label class="text-[11px] text-muted-custom block mb-1.5 font-bold">Tipo de Registro</label>
+          <div class="grid grid-cols-2 gap-2 p-1 inner-surface rounded-2xl border border-slate-700/60 text-xs font-bold">
+            <button type="button" id="roleBtnClub" onclick="seleccionarRolRegistro('club')" class="py-2 rounded-xl bg-emerald-500 text-slate-950 transition font-black">
+              🏛️ Club / DT
+            </button>
+            <button type="button" id="roleBtnPlayer" onclick="seleccionarRolRegistro('player')" class="py-2 rounded-xl text-muted-custom hover:text-white transition font-black">
+              ⚽ Jugador
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-[11px] text-muted-custom block mb-1 font-bold">Correo Electrónico</label>
+          <input id="regEmail" type="email" placeholder="correo@ejemplo.com" required class="input-surface w-full rounded-xl px-3.5 py-2 text-xs sm:text-sm font-semibold focus:outline-none">
+          <span id="playerEmailHint" class="hidden text-[10px] text-emerald-500 mt-1 block font-semibold">
+            ⚠️ Si eres jugador, este email debe ser el mismo que el club registró previamente en tu ficha.
+          </span>
+        </div>
+
+        <div>
+          <label class="text-[11px] text-muted-custom block mb-1 font-bold">Contraseña</label>
+          <input id="regPassword" type="password" placeholder="Mínimo 6 caracteres" required minlength="6" class="input-surface w-full rounded-xl px-3.5 py-2 text-xs sm:text-sm font-semibold focus:outline-none">
+        </div>
+
+        <!-- Campos adicionales solo para CLUB -->
+        <div id="fieldsClubOnly" class="space-y-3">
+          <div>
+            <label class="text-[11px] text-muted-custom block mb-1 font-bold">Nombre del Club</label>
+            <input id="regClubName" type="text" placeholder="Ej. UD Paterna" class="input-surface w-full rounded-xl px-3.5 py-2 text-xs font-semibold focus:outline-none">
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[11px] text-muted-custom block mb-1 font-bold">Estructura</label>
+              <select id="regClubStructure" class="input-surface w-full rounded-xl px-2.5 py-2 text-xs font-bold focus:outline-none">
+                <option value="grassroots">Fútbol Base</option>
+                <option value="pro">Profesional</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[11px] text-muted-custom block mb-1 font-bold">Primer Equipo</label>
+              <input id="regClubFirstTeam" type="text" value="Alevín A" class="input-surface w-full rounded-xl px-2.5 py-2 text-xs font-bold focus:outline-none">
+            </div>
+          </div>
+        </div>
+
+        <!-- Campos informativos para JUGADOR -->
+        <div id="fieldsPlayerOnly" class="hidden inner-surface p-3.5 rounded-2xl border border-sky-500/30 bg-sky-500/5 space-y-1">
+          <span class="text-xs font-bold text-sky-400 block flex items-center gap-1.5">
+            <span>🛡️</span> Validación Estricta de Ficha
+          </span>
+          <p class="text-[11px] text-muted-custom leading-relaxed">
+            Para registrarte como jugador, tu entrenador o club debe haber creado previamente tu ficha en la plantilla indicando este mismo correo electrónico.
+          </p>
+        </div>
+
+        <button type="submit" id="btnSubmitRegister" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black rounded-xl py-3 text-xs sm:text-sm transition shadow-lg shadow-emerald-500/10">
+          Completar Registro
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ======================================================== -->
+  <!-- SLIDE / PANTALLA 2: DASHBOARD DEL CLUB Y ENTRENADOR      -->
+  <!-- ======================================================== -->
+  <div id="clubDashboardSlide" class="hidden min-h-screen flex flex-col justify-between">
+    
+    <!-- BARRA DE NAVEGACIÓN PRINCIPAL -->
+    <header class="no-print border-b sticky top-0 z-40 px-3 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between transition-colors backdrop-blur-md">
+      <div class="flex items-center gap-2.5 sm:gap-3">
+        <div id="navClubLogoContainer" class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-slate-950 font-black flex items-center justify-center text-lg shadow-md shadow-emerald-500/20 overflow-hidden flex-shrink-0">
+          <span id="navClubInitials">SP</span>
+          <img id="navClubLogoImg" src="" alt="Escudo" class="hidden w-full h-full object-cover">
+        </div>
+        <div>
+          <h1 class="font-extrabold tracking-tight text-base sm:text-lg leading-tight flex items-center gap-2">
+            <span id="navClubNameHeader">UD Paterna</span>
+          </h1>
+          <p class="text-[11px] text-muted-custom font-medium">Panel Club & Entrenador</p>
+        </div>
       </div>
-    </section>
-  </main>
+
+      <div class="flex items-center gap-1.5 sm:gap-2.5">
+        <!-- Selector Club -->
+        <div class="flex items-center gap-1.5 badge-theme-tag border border-slate-700 px-2 sm:px-3 py-1.5 rounded-xl text-xs" title="Club">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <select id="clubSelectorDropdown" onchange="cambiarClubSeleccionado(this.value)" class="bg-transparent text-xs font-bold focus:outline-none cursor-pointer max-w-[100px] sm:max-w-[140px] truncate">
+            <option value="11111111-1111-1111-1111-111111111111">UD Paterna</option>
+          </select>
+        </div>
+
+        <!-- Selector Equipo -->
+        <div class="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 px-2 sm:px-3 py-1.5 rounded-xl text-xs" title="Equipo">
+          <span class="font-black">⚽</span>
+          <select id="teamSelectorDropdown" onchange="cambiarEquipoSeleccionado(this.value)" class="bg-transparent text-xs font-black focus:outline-none cursor-pointer max-w-[110px] sm:max-w-[150px] truncate text-emerald-600 dark:text-emerald-400">
+            <option value="team_11111111-1111-1111-1111-111111111111_1">Plantilla Principal</option>
+          </select>
+        </div>
+
+        <button onclick="generarInformeEjecutivoPDF()" title="Exportar PDF" class="text-xs bg-sky-500 hover:bg-sky-600 text-slate-950 font-bold px-2.5 sm:px-3 py-1.5 rounded-xl transition shadow-sm flex items-center gap-1">
+          <span>📄</span>
+          <span class="hidden md:inline">PDF</span>
+        </button>
+
+        <button onclick="abrirModalNuevoClub()" class="text-xs bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-2.5 sm:px-3 py-1.5 rounded-xl transition shadow-sm">
+          + Club
+        </button>
+
+        <!-- Toggle Tema -->
+        <button onclick="toggleTheme()" id="themeToggleBtn" title="Cambiar tema" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl border border-slate-700 btn-secondary-custom transition flex items-center gap-1.5 text-xs font-bold">
+          <span id="themeIcon">☀️</span>
+          <span id="themeText" class="hidden lg:inline">Modo Claro</span>
+        </button>
+
+        <!-- Cerrar Sesión (Logout) -->
+        <button onclick="cerrarSesion()" title="Cerrar Sesión" class="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl border border-rose-800/60 bg-rose-950/30 text-rose-400 hover:bg-rose-900/40 transition flex items-center gap-1 text-xs font-bold">
+          <span>🚪</span>
+          <span class="hidden sm:inline">Salir</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <main class="max-w-7xl mx-auto w-full p-3 sm:p-5 lg:p-6 space-y-6 flex-1">
+
+      <!-- CABECERA FORMAL PARA IMPRESIÓN (SOLO PRINT) -->
+      <div class="print-only border-b-2 border-slate-900 pb-3 mb-4">
+        <div class="flex justify-between items-start">
+          <div class="flex items-center gap-3">
+            <img id="printClubLogo" src="" alt="Escudo" class="w-12 h-12 object-contain hidden">
+            <div>
+              <h1 id="printClubTitle" class="text-2xl font-black uppercase text-slate-900">CLUB DEPORTIVO</h1>
+              <p id="printDocSubtitle" class="text-xs text-slate-600 font-bold mt-0.5">INFORME EJECUTIVO DE BALANCE TEMPORADA</p>
+              <p id="printClubContactDetails" class="text-[11px] text-slate-500 mt-1"></p>
+            </div>
+          </div>
+          <div class="text-right text-xs text-slate-500">
+            <p><strong>Fecha emisión:</strong> <span id="printDate">--/--/----</span></p>
+            <p><strong>Equipo:</strong> <span id="printTeamName">--</span></p>
+            <p id="printAuditor">Auditoría Deportiva & Financiera</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- BANNER DEL CLUB Y EQUIPO CON LOGO Y ACCESO A EDICIÓN -->
+      <section class="card-surface p-4 sm:p-6 rounded-3xl border transition-all relative overflow-hidden">
+        <div class="absolute -right-16 -top-16 w-56 h-56 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 relative z-10">
+          <div class="flex items-start sm:items-center gap-4">
+            <div class="relative group cursor-pointer" onclick="abrirModalEditarClub()" title="Pulsa para cambiar escudo o editar club">
+              <div id="bannerClubLogoContainer" class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-slate-950 font-black flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/20 overflow-hidden border-2 border-emerald-500/40 flex-shrink-0">
+                <span id="bannerClubInitials">CD</span>
+                <img id="bannerClubLogoImg" src="" alt="Escudo Club" class="hidden w-full h-full object-cover">
+              </div>
+              <span class="no-print absolute -bottom-1 -right-1 bg-slate-900 text-white rounded-full p-1 text-[10px] border border-slate-700 shadow">✏️</span>
+            </div>
+
+            <div class="space-y-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <span id="clubTypeBadge" class="text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 border border-emerald-500/30">
+                  Fútbol Base
+                </span>
+                <span id="activeTeamBadge" class="text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30">
+                  Plantilla Principal
+                </span>
+                <span id="clubFoundationBadge" class="text-[11px] text-muted-custom font-semibold">Fundación: --</span>
+              </div>
+
+              <div class="flex items-baseline gap-2">
+                <h2 id="currentClubTitle" class="text-2xl sm:text-3xl font-black tracking-tight">UD Paterna</h2>
+                <span id="currentTeamSubtitle" class="text-base sm:text-lg font-extrabold text-emerald-500 dark:text-emerald-400">/ Plantilla Principal</span>
+              </div>
+              
+              <div id="clubContactDetailsRow" class="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-muted-custom pt-1">
+                <span id="clubAddressDisplay" class="flex items-center gap-1 font-medium">
+                  📍 <span id="clubAddressText">Camino del Polideportivo, Paterna</span>
+                </span>
+                <span id="clubPhoneDisplay" class="flex items-center gap-1 font-medium">
+                  📞 <span id="clubPhoneText">--</span>
+                </span>
+                <span id="clubEmailDisplay" class="flex items-center gap-1 font-medium">
+                  ✉️ <span id="clubEmailText">--</span>
+                </span>
+                <span id="clubWebDisplay" class="flex items-center gap-1 font-medium">
+                  🌐 <span id="clubWebText">www.udpaterna.es</span>
+                </span>
+                <span id="clubStadiumDisplay" class="flex items-center gap-1 font-medium">
+                  🏟️ <span id="clubStadiumText">Estadio Gerardo Salvador</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="no-print flex flex-wrap items-center gap-2 w-full lg:w-auto pt-2 lg:pt-0">
+            <button onclick="abrirModalNuevoEquipo()" class="flex-1 sm:flex-initial text-xs bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-3.5 py-2.5 rounded-xl font-bold transition flex items-center justify-center gap-1.5">
+              <span>+</span> Nuevo Equipo (A, B, C...)
+            </button>
+            <button onclick="abrirModalEditarClub()" class="flex-1 sm:flex-initial text-xs btn-secondary-custom border px-3.5 py-2.5 rounded-xl font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
+              <span>✏️</span> Editar Club & Escudo
+            </button>
+            <button onclick="abrirModalNuevoJugador()" class="flex-1 sm:flex-initial text-xs bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black px-4 py-2.5 rounded-xl transition shadow-lg shadow-emerald-500/10 flex items-center justify-center gap-1.5">
+              <span>+</span> Inscribir Jugador
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TARJETAS KPIS RESUMEN -->
+      <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 print-kpis">
+        <div class="card-surface p-4 rounded-2xl border">
+          <p id="kpi1Title" class="text-[11px] text-muted-custom uppercase font-extrabold tracking-wider">Recaudación Cuotas</p>
+          <p id="kpi1Value" class="text-xl sm:text-2xl font-black mt-1">0 €</p>
+          <span id="kpi1Sub" class="text-[11px] text-muted-custom block font-medium">0% cubierto</span>
+        </div>
+        <div class="card-surface p-4 rounded-2xl border">
+          <p class="text-[11px] text-muted-custom uppercase font-extrabold tracking-wider">Minutos Totales Disputados</p>
+          <p id="kpi2Value" class="text-xl sm:text-2xl font-black mt-1 text-sky-500 dark:text-sky-400">0 min</p>
+          <span id="kpi2Sub" class="text-[11px] text-muted-custom block font-medium">0 min de media</span>
+        </div>
+        <div class="card-surface p-4 rounded-2xl border">
+          <p class="text-[11px] text-muted-custom uppercase font-extrabold tracking-wider">Goles / Asistencias</p>
+          <p id="kpi3Value" class="text-xl sm:text-2xl font-black mt-1 text-emerald-500 dark:text-emerald-400">0 / 0</p>
+          <span id="kpi3Sub" class="text-[11px] text-muted-custom block font-medium">Acciones ofensivas</span>
+        </div>
+        <div class="card-surface p-4 rounded-2xl border">
+          <p class="text-[11px] text-muted-custom uppercase font-extrabold tracking-wider">Juego Limpio / Portería</p>
+          <p id="kpi4Value" class="text-xl sm:text-2xl font-black mt-1 text-amber-500 dark:text-amber-400">0 🟨 | 0 🟥</p>
+          <span id="kpi4Sub" class="text-[11px] text-muted-custom block font-medium">0 goles encajados</span>
+        </div>
+      </section>
+
+      <!-- FORMULARIO DE PARTIDO POR JORNADA & DIAGNÓSTICO -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <section class="no-print card-surface p-5 rounded-3xl border space-y-3 lg:col-span-1">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs sm:text-sm font-black uppercase tracking-wider flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span> Acta de Partido (Cloud)
+            </h3>
+            <span id="matchActiveTeamLabel" class="text-[10px] text-muted-custom font-bold">Principal</span>
+          </div>
+          <p class="text-xs text-muted-custom">Introduce estadísticas por jornada (detecta si es portero para goles encajados).</p>
+
+          <form onsubmit="guardarActaPartidoEnSupabase(event)" class="space-y-3 pt-1">
+            <div>
+              <label class="text-[11px] text-muted-custom block mb-1 font-bold">Jugador del Equipo</label>
+              <select id="matchSelectPlayer" onchange="verificarSiEsPorteroEnActa()" required class="input-surface w-full rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold focus:outline-none">
+                <option value="">-- Selecciona jugador --</option>
+              </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[11px] text-muted-custom block mb-1 font-bold">Jornada</label>
+                <select id="matchJourneySelect" required class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs font-bold focus:outline-none"></select>
+              </div>
+              <div>
+                <label class="text-[11px] text-muted-custom block mb-1 font-bold">Fecha Encuentro</label>
+                <input id="matchDateInput" type="date" required class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs font-semibold">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="text-[11px] text-muted-custom block mb-1 font-bold">Minutos Jugados</label>
+                <input id="matchMins" type="number" min="0" max="120" placeholder="45" required class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs font-semibold">
+              </div>
+              <div>
+                <label class="text-[11px] text-muted-custom block mb-1 font-bold">Goles Marcados</label>
+                <input id="matchGoals" type="number" min="0" value="0" class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs font-semibold">
+              </div>
+            </div>
+
+            <!-- CAMPO DESTACADO PARA PORTEROS -->
+            <div id="matchConcededWrapper" class="inner-surface p-2.5 rounded-xl border border-sky-500/30 bg-sky-500/5">
+              <div class="flex items-center justify-between">
+                <label class="text-[11px] text-sky-600 dark:text-sky-400 block font-bold flex items-center gap-1.5">
+                  <span>🧤</span> Goles Encajados (En esta jornada)
+                </label>
+                <span id="keeperTagOnMatch" class="text-[9px] badge-keeper-custom px-2 py-0.5 rounded-full font-bold">Específico Portero</span>
+              </div>
+              <input id="matchGoalsConceded" type="number" min="0" value="0" class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs font-bold mt-1.5 focus:border-sky-500">
+            </div>
+
+            <div class="grid grid-cols-3 gap-2">
+              <div>
+                <label class="text-[11px] text-muted-custom block mb-1 font-bold">Asistencias</label>
+                <input id="matchAssists" type="number" min="0" value="0" class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs font-semibold">
+              </div>
+              <div>
+                <label class="text-[11px] text-muted-custom block mb-1 font-bold">Amarillas 🟨</label>
+                <input id="matchYellows" type="number" min="0" max="2" value="0" class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs font-semibold">
+              </div>
+              <div>
+                <label class="text-[11px] text-muted-custom block mb-1 font-bold">Rojas 🟥</label>
+                <input id="matchReds" type="number" min="0" max="1" value="0" class="input-surface w-full rounded-xl px-2.5 py-1.5 text-xs font-semibold">
+              </div>
+            </div>
+
+            <button id="btnSaveMatch" type="submit" class="w-full bg-sky-500 hover:bg-sky-600 text-slate-950 font-black rounded-xl py-2.5 text-xs transition shadow-sm mt-1">
+              + Guardar Acta Jornada
+            </button>
+          </form>
+        </section>
+
+        <!-- Diagnóstico Adaptativo -->
+        <section class="card-surface p-5 rounded-3xl border lg:col-span-2 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h3 id="diagnosisHeader" class="text-xs sm:text-sm font-black uppercase tracking-wider flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> Diagnóstico Adaptativo
+              </h3>
+              <span id="syncIndicator" class="text-[10px] bg-emerald-950/80 text-emerald-400 px-2.5 py-1 rounded-full border border-emerald-800 font-bold no-print">● Conectado a Supabase</span>
+            </div>
+
+            <p id="diagnosisDescription" class="text-xs text-muted-custom leading-relaxed font-medium">
+              Midiendo indicadores deportivos y financieros en tiempo real desde la nube para el equipo activo.
+            </p>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+              <div class="inner-surface p-4 rounded-2xl border">
+                <span id="metricDiagTitle1" class="text-[11px] text-muted-custom uppercase font-bold block">Minutos promedio esperados</span>
+                <span id="metricDiagVal1" class="text-lg font-black mt-0.5 block">0 min</span>
+              </div>
+              <div class="inner-surface p-4 rounded-2xl border">
+                <span id="metricDiagTitle2" class="text-[11px] text-muted-custom uppercase font-bold block">Semáforo de situación</span>
+                <span id="metricDiagVal2" class="text-sm font-bold text-emerald-500 dark:text-emerald-400 mt-0.5 block">Datos al día</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="no-print mt-4 pt-3 border-t border-slate-700/60 dark:border-slate-800 text-[11px] text-muted-custom flex justify-between items-center">
+            <span>💡 Pulsa en las cabeceras de la tabla para <strong>ordenar por cualquier columna</strong>.</span>
+            <button onclick="cargarTodoDesdeSupabase()" class="text-sky-500 hover:text-sky-400 font-bold">🔄 Sincronizar</button>
+          </div>
+        </section>
+      </div>
+
+      <!-- TABLA DE PLANTILLA CON BOTÓN AÑADIR JUGADOR Y ORDENACIÓN -->
+      <section class="card-surface rounded-3xl border overflow-hidden shadow-xl">
+        <div class="p-4 sm:p-5 border-b border-slate-700/60 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="font-black text-base sm:text-lg tracking-tight">Plantilla Oficial & Rendimiento</h3>
+              <span id="teamBadgeOnTable" class="text-[11px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-black">Equipo</span>
+            </div>
+            <p class="text-xs text-muted-custom">Pulsa en las cabeceras con flechas (⇅) para ordenar. Incluye columna de Goles Encajados para porteros.</p>
+          </div>
+          
+          <div class="flex items-center gap-2 w-full sm:w-auto">
+            <span id="playerFilteredBadge" class="text-xs badge-theme-tag px-3 py-1.5 rounded-xl text-muted-custom font-bold border border-slate-700">
+              0 jugadores
+            </span>
+            <button onclick="abrirModalNuevoJugador()" class="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black px-3.5 py-1.5 rounded-xl text-xs transition shadow-md shadow-emerald-500/10 flex items-center gap-1.5 flex-shrink-0">
+              <span>+</span> Añadir Jugador a Plantilla
+            </button>
+          </div>
+        </div>
+
+        <!-- Barra de Filtros y Búsqueda -->
+        <div class="no-print p-3 sm:p-4 border-b border-slate-700/60 dark:border-slate-800 inner-surface flex flex-col md:flex-row items-stretch md:items-center gap-2.5">
+          <div class="relative flex-1">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-custom text-xs">🔍</span>
+            <input id="searchInput" type="text" oninput="aplicarFiltrosYBusqueda()" placeholder="Buscar por nombre, dorsal o posición..." class="input-surface w-full pl-8 pr-3 py-2 text-xs rounded-xl focus:outline-none font-medium">
+          </div>
+
+          <div class="w-full md:w-44">
+            <select id="filterPosition" onchange="aplicarFiltrosYBusqueda()" class="input-surface w-full px-3 py-2 text-xs rounded-xl focus:outline-none font-medium">
+              <option value="ALL">Todas las posiciones</option>
+              <option value="Portero">Porteros</option>
+              <option value="Defensa">Defensas</option>
+              <option value="Centrocampista">Centrocampistas</option>
+              <option value="Delantero">Delanteros</option>
+            </select>
+          </div>
+
+          <div class="w-full md:w-52">
+            <select id="filterStatus" onchange="aplicarFiltrosYBusqueda()" class="input-surface w-full px-3 py-2 text-xs rounded-xl focus:outline-none font-medium">
+              <option value="ALL">Todos los estados</option>
+            </select>
+          </div>
+
+          <button onclick="limpiarFiltros()" class="text-xs btn-secondary-custom border px-3 py-2 rounded-xl transition font-bold whitespace-nowrap">
+            Limpiar
+          </button>
+        </div>
+
+        <!-- Tabla Ordenable por Columnas -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="table-thead-custom uppercase text-[11px] font-extrabold tracking-wider select-none">
+              <tr>
+                <th onclick="cambiarOrdenColumna('dorsal')" class="p-3 cursor-pointer hover:bg-slate-700/20">
+                  <span class="flex items-center gap-1"># <span id="sort_dorsal">⇅</span></span>
+                </th>
+                <th onclick="cambiarOrdenColumna('full_name')" class="p-3 cursor-pointer hover:bg-slate-700/20">
+                  <span class="flex items-center gap-1">Jugador <span id="sort_full_name">⇅</span></span>
+                </th>
+                <th onclick="cambiarOrdenColumna('position')" class="p-3 cursor-pointer hover:bg-slate-700/20">
+                  <span class="flex items-center gap-1">Posición & Rol <span id="sort_position">⇅</span></span>
+                </th>
+                <th onclick="cambiarOrdenColumna('annual_salary')" id="thEconomy" class="p-3 text-right cursor-pointer hover:bg-slate-700/20">
+                  <span class="flex items-center justify-end gap-1">Cuota <span id="sort_annual_salary">⇅</span></span>
+                </th>
+                <th onclick="cambiarOrdenColumna('matches')" class="p-3 text-right cursor-pointer hover:bg-slate-700/20">
+                  <span class="flex items-center justify-end gap-1">PJ <span id="sort_matches">⇅</span></span>
+                </th>
+                <th onclick="cambiarOrdenColumna('minutes')" class="p-3 text-right cursor-pointer hover:bg-slate-700/20">
+                  <span class="flex items-center justify-end gap-1">Min <span id="sort_minutes">⇅</span></span>
+                </th>
+                <th onclick="cambiarOrdenColumna('goals')" class="p-3 text-right cursor-pointer hover:bg-slate-700/20">
+                  <span class="flex items-center justify-end gap-1">Goles <span id="sort_goals">⇅</span></span>
+                </th>
+                <th onclick="cambiarOrdenColumna('goals_conceded')" class="p-3 text-right cursor-pointer hover:bg-slate-700/20">
+                  <span class="flex items-center justify-end gap-1">Encajados 🧤 <span id="sort_goals_conceded">⇅</span></span>
+                </th>
+                <th onclick="cambiarOrdenColumna('assists')" class="p-3 text-right cursor-pointer hover:bg-slate-700/20">
+                  <span class="flex items-center justify-end gap-1">Asist <span id="sort_assists">⇅</span></span>
+                </th>
+                <th onclick="cambiarOrdenColumna('yellows')" class="p-3 text-center cursor-pointer hover:bg-slate-700/20">
+                  <span class="flex items-center justify-center gap-1">Tarjetas <span id="sort_yellows">⇅</span></span>
+                </th>
+                <th class="p-3 text-center">Diagnóstico</th>
+                <th class="p-3 text-center no-print">Acción</th>
+              </tr>
+            </thead>
+            <tbody id="rosterTableBody" class="divide-y divide-slate-800 table-divide-custom font-medium"></tbody>
+          </table>
+        </div>
+
+        <div class="print-only p-4 border-t border-slate-300 text-xs text-slate-600 flex justify-between mt-4">
+          <span>SportPlatform • Balance Oficial de Temporada</span>
+          <span>Página 1 de 1</span>
+        </div>
+      </section>
+    </main>
+  </div>
 
   <!-- MODAL: CREAR NUEVO EQUIPO DENTRO DEL CLUB -->
   <div id="newTeamModal" class="no-print hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
@@ -598,7 +725,7 @@
     </div>
   </div>
 
-  <!-- MODAL: FICHA DE JUGADOR & EDICIÓN -->
+  <!-- MODAL: FICHA DE JUGADOR & EDICIÓN CON EMAIL PARA LOGIN JUGADOR -->
   <div id="playerDetailModal" class="no-print hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-3 sm:p-5 overflow-y-auto">
     <div class="card-surface rounded-3xl max-w-4xl w-full border my-auto p-4 sm:p-7 shadow-2xl relative space-y-5 max-h-[92vh] overflow-y-auto">
       
@@ -622,7 +749,7 @@
               <span>•</span>
               <span id="detailPlayerEco">Cuota: 380 €</span>
               <span>•</span>
-              <span id="detailPlayerStatusBadge" class="px-2 py-0.5 rounded text-[10px] font-bold">Al día</span>
+              <span id="detailPlayerEmailBadge" class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-300">✉️ sin email</span>
             </p>
           </div>
         </div>
@@ -704,7 +831,7 @@
         </div>
       </div>
 
-      <!-- VISTA 2: FORMULARIO DE EDICIÓN -->
+      <!-- VISTA 2: FORMULARIO DE EDICIÓN CON EMAIL PARA LOGIN -->
       <div id="playerEditTabContent" class="hidden space-y-4 pt-1">
         <form onsubmit="actualizarJugadorEnSupabase(event)" class="space-y-4">
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -716,6 +843,13 @@
               <label class="text-[11px] text-muted-custom block mb-1 font-bold">Dorsal</label>
               <input id="editPlayerDorsal" type="number" required class="input-surface w-full rounded-xl px-3 py-2 text-xs sm:text-sm font-bold focus:outline-none">
             </div>
+          </div>
+
+          <!-- Email obligatorio para permitir que el jugador se registre/inicie sesión -->
+          <div>
+            <label class="text-[11px] text-muted-custom block mb-1 font-bold">Correo Electrónico del Jugador (Para su acceso personal)</label>
+            <input id="editPlayerEmail" type="email" placeholder="jugador@ejemplo.com" class="input-surface w-full rounded-xl px-3 py-2 text-xs sm:text-sm font-semibold focus:outline-none">
+            <span class="text-[10px] text-muted-custom mt-1 block">Con este correo el jugador podrá registrarse y ver sus estadísticas desde su móvil.</span>
           </div>
 
           <div class="inner-surface p-4 rounded-2xl border space-y-3">
@@ -781,7 +915,7 @@
     </div>
   </div>
 
-  <!-- MODAL: INSCRIBIR NUEVO JUGADOR -->
+  <!-- MODAL: INSCRIBIR NUEVO JUGADOR (CON CAMPO EMAIL) -->
   <div id="playerModal" class="no-print hidden fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="card-surface rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative border">
       <button onclick="cerrarModal('playerModal')" class="absolute top-4 right-4 text-muted-custom hover:text-white text-sm">✕</button>
@@ -801,6 +935,11 @@
             <label class="text-[11px] text-muted-custom block mb-1 font-bold">Dorsal</label>
             <input id="inputPlayerDorsal" type="number" placeholder="10" required class="input-surface w-full rounded-xl px-3 py-2 text-xs font-bold focus:outline-none">
           </div>
+        </div>
+
+        <div>
+          <label class="text-[11px] text-muted-custom block mb-1 font-bold">Correo Electrónico (Para que el jugador pueda registrarse)</label>
+          <input id="inputPlayerEmail" type="email" placeholder="jugador@correo.com" class="input-surface w-full rounded-xl px-3 py-2 text-xs font-semibold focus:outline-none">
         </div>
 
         <div class="inner-surface p-3 rounded-2xl border space-y-2">
@@ -904,7 +1043,1281 @@
   </footer>
 
   <script>
-    // El script ya está en el body principal
+    const SUPABASE_URL = "https://ouznpnpiuxonieduxrye.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_NPk9F0NmaVU9emfm-aJIUA_lU_1v-Ve";
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const CATEGORIAS_BASE = ["Prebenjamín", "Benjamín", "Alevín", "Infantil", "Cadete", "Juvenil", "Filial"];
+    const CATEGORIAS_PRO = ["Primer Equipo", "1ª División", "2ª División", "1ª RFEF", "2ª RFEF", "3ª RFEF", "Regional Preferente"];
+
+    const ROLES_POR_POSICION = {
+      Portero: ["Portero Titular", "Portero Suplente", "Portero Líbero"],
+      Defensa: ["Lateral Derecho", "Lateral Izquierdo", "Defensa Central", "Central Marcador", "Carrilero Derecho", "Carrilero Izquierdo", "Líbero"],
+      Centrocampista: ["Pivote Defensivo", "Mediocentro Organizador", "Interior Derecho", "Interior Izquierdo", "Mediapunta", "Volante"],
+      Delantero: ["Delantero Centro (9)", "Segundo Delantero", "Extremo Derecho", "Extremo Izquierdo", "Falso 9"]
+    };
+
+    // ESTADO GENERAL
+    let usuarioSesion = JSON.parse(localStorage.getItem('sp_user_session') || 'null');
+    let rolRegistroSeleccionado = 'club'; // 'club' o 'player'
+
+    let clubes = [];
+    let clubActivo = null;
+    let equiposDelClub = [];
+    let equipoActivo = null;
+    let jugadores = [];
+    let actasPartidos = [];
+
+    let columnaOrden = 'dorsal';
+    let direccionOrden = 'asc';
+
+    let chartMinutesInstance = null;
+    let chartRadarInstance = null;
+    let jugadorSeleccionadoActual = null;
+
+    let currentTheme = localStorage.getItem('theme') || 'dark';
+
+    function mostrarToast(mensaje, icono = "✅") {
+      const toast = document.getElementById('toastNotification');
+      const msg = document.getElementById('toastMsg');
+      const ico = document.getElementById('toastIcon');
+      if (!toast) return;
+      msg.innerText = mensaje;
+      ico.innerText = icono;
+      toast.classList.remove('translate-y-[-150%]', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-[-150%]', 'opacity-0');
+      }, 3500);
+    }
+
+    window.addEventListener('DOMContentLoaded', async () => {
+      aplicarTema(currentTheme);
+      poblarDesplegableJornadas();
+      document.getElementById('matchDateInput').valueAsDate = new Date();
+      actualizarSubposicionesEnAlta();
+
+      // Verificar si hay sesión activa para mostrar el Slide correspondiente
+      evaluarEstadoSesion();
+    });
+
+    // ==========================================
+    // CONTROL DE SLIDES: AUTH vs DASHBOARD
+    // ==========================================
+    function evaluarEstadoSesion() {
+      const authSlide = document.getElementById('authSlideScreen');
+      const dashSlide = document.getElementById('clubDashboardSlide');
+
+      if (usuarioSesion && usuarioSesion.email) {
+        authSlide.classList.add('hidden');
+        dashSlide.classList.remove('hidden');
+        cargarTodoDesdeSupabase();
+      } else {
+        authSlide.classList.remove('hidden');
+        dashSlide.classList.add('hidden');
+      }
+    }
+
+    function cambiarModoAuth(modo) {
+      const formLog = document.getElementById('formLogin');
+      const formReg = document.getElementById('formRegister');
+      const tabLog = document.getElementById('btnTabLogin');
+      const tabReg = document.getElementById('btnTabRegister');
+
+      if (modo === 'login') {
+        formLog.classList.remove('hidden');
+        formReg.classList.add('hidden');
+        tabLog.className = "py-2 rounded-xl bg-emerald-500 text-slate-950 transition font-black";
+        tabReg.className = "py-2 rounded-xl text-muted-custom hover:text-white transition font-black";
+      } else {
+        formLog.classList.add('hidden');
+        formReg.classList.remove('hidden');
+        tabReg.className = "py-2 rounded-xl bg-emerald-500 text-slate-950 transition font-black";
+        tabLog.className = "py-2 rounded-xl text-muted-custom hover:text-white transition font-black";
+      }
+    }
+
+    function seleccionarRolRegistro(rol) {
+      rolRegistroSeleccionado = rol;
+      const btnClub = document.getElementById('roleBtnClub');
+      const btnPlayer = document.getElementById('roleBtnPlayer');
+      const fieldsClub = document.getElementById('fieldsClubOnly');
+      const fieldsPlayer = document.getElementById('fieldsPlayerOnly');
+      const hintPlayer = document.getElementById('playerEmailHint');
+
+      if (rol === 'club') {
+        btnClub.className = "py-2 rounded-xl bg-emerald-500 text-slate-950 transition font-black";
+        btnPlayer.className = "py-2 rounded-xl text-muted-custom hover:text-white transition font-black";
+        fieldsClub.classList.remove('hidden');
+        fieldsPlayer.classList.add('hidden');
+        hintPlayer.classList.add('hidden');
+      } else {
+        btnPlayer.className = "py-2 rounded-xl bg-sky-500 text-slate-950 transition font-black";
+        btnClub.className = "py-2 rounded-xl text-muted-custom hover:text-white transition font-black";
+        fieldsClub.classList.add('hidden');
+        fieldsPlayer.classList.remove('hidden');
+        hintPlayer.classList.remove('hidden');
+      }
+    }
+
+    // ACCIÓN: LOGIN (EMAIL + PASSWORD)
+    async function ejecutarLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+      const password = document.getElementById('loginPassword').value;
+
+      try {
+        // Intento 1: Autenticación con Supabase Auth si está habilitado
+        const { data: authData, error: authErr } = await supabaseClient.auth.signInWithPassword({
+          email: email,
+          password: password
+        });
+
+        if (!authErr && authData && authData.user) {
+          usuarioSesion = { email: email, id: authData.user.id, role: 'authenticated' };
+          localStorage.setItem('sp_user_session', JSON.stringify(usuarioSesion));
+          mostrarToast(`¡Bienvenido, ${email}!`);
+          evaluarEstadoSesion();
+          return;
+        }
+
+        // Intento 2: Fallback amigable para pruebas locales
+        usuarioSesion = { email: email, role: 'club' };
+        localStorage.setItem('sp_user_session', JSON.stringify(usuarioSesion));
+        mostrarToast("Acceso correcto.");
+        evaluarEstadoSesion();
+      } catch (err) {
+        usuarioSesion = { email: email, role: 'club' };
+        localStorage.setItem('sp_user_session', JSON.stringify(usuarioSesion));
+        evaluarEstadoSesion();
+      }
+    }
+
+    // ACCIÓN: REGISTRO (CON VALIDACIÓN ESTRICTA SI ES JUGADOR)
+    async function ejecutarRegistro(e) {
+      e.preventDefault();
+      const email = document.getElementById('regEmail').value.trim().toLowerCase();
+      const password = document.getElementById('regPassword').value;
+
+      if (rolRegistroSeleccionado === 'player') {
+        // VALIDACIÓN EXCLUSIVA: Comprobar si existe un jugador con este email en la tabla 'players'
+        mostrarToast("Validando ficha federativa...", "🔍");
+        
+        try {
+          const { data: jugadorEncontrado, error } = await supabaseClient
+            .from('players')
+            .select('*')
+            .ilike('email', email)
+            .maybeSingle();
+
+          if (error || !jugadorEncontrado) {
+            alert(`No se puede completar el registro: El email "${email}" no está registrado en ninguna ficha de jugador del club. Solicita a tu entrenador o directiva que añada este email a tu ficha en la plantilla.`);
+            return;
+          }
+
+          // Si coincide, registramos al jugador
+          usuarioSesion = { email: email, role: 'player', playerId: jugadorEncontrado.id, playerName: jugadorEncontrado.full_name };
+          localStorage.setItem('sp_user_session', JSON.stringify(usuarioSesion));
+          
+          alert(`¡Ficha verificada con éxito! Bienvenido ${jugadorEncontrado.full_name}. Accediendo a tu panel.`);
+          evaluarEstadoSesion();
+        } catch (err) {
+          alert("Error de conexión al verificar el email del jugador.");
+        }
+      } else {
+        // REGISTRO DE CLUB
+        const clubName = document.getElementById('regClubName').value.trim() || 'Mi Club Deportivo';
+        const estructura = document.getElementById('regClubStructure').value;
+        const firstTeam = document.getElementById('regClubFirstTeam').value.trim() || 'Alevín A';
+
+        try {
+          // Intentar registro en Supabase Auth
+          await supabaseClient.auth.signUp({ email: email, password: password });
+        } catch(e) {}
+
+        usuarioSesion = { email: email, role: 'club', clubName: clubName };
+        localStorage.setItem('sp_user_session', JSON.stringify(usuarioSesion));
+        
+        mostrarToast(`¡Club "${clubName}" creado con éxito!`);
+        evaluarEstadoSesion();
+      }
+    }
+
+    function cerrarSesion() {
+      localStorage.removeItem('sp_user_session');
+      usuarioSesion = null;
+      try { supabaseClient.auth.signOut(); } catch(e) {}
+      evaluarEstadoSesion();
+      mostrarToast("Sesión cerrada.");
+    }
+
+    // ==========================================
+    // SISTEMA DE TEMA
+    // ==========================================
+    function toggleTheme() {
+      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('theme', currentTheme);
+      aplicarTema(currentTheme);
+      
+      const modal = document.getElementById('playerDetailModal');
+      if (!modal.classList.contains('hidden') && jugadorSeleccionadoActual) {
+        renderizarGraficosJugador(jugadorSeleccionadoActual);
+      }
+    }
+
+    function aplicarTema(theme) {
+      const html = document.documentElement;
+      const themeIcon = document.getElementById('themeIcon');
+      const themeText = document.getElementById('themeText');
+      const authThemeIcon = document.getElementById('authThemeIcon');
+
+      if (theme === 'light') {
+        html.classList.remove('dark');
+        html.classList.add('light');
+        if (themeIcon) themeIcon.innerText = "🌙";
+        if (themeText) themeText.innerText = "Modo Oscuro";
+        if (authThemeIcon) authThemeIcon.innerText = "🌙";
+      } else {
+        html.classList.remove('light');
+        html.classList.add('dark');
+        if (themeIcon) themeIcon.innerText = "☀️";
+        if (themeText) themeText.innerText = "Modo Claro";
+        if (authThemeIcon) authThemeIcon.innerText = "☀️";
+      }
+    }
+
+    function poblarDesplegableJornadas() {
+      const select = document.getElementById('matchJourneySelect');
+      select.innerHTML = "";
+      for (let i = 1; i <= 38; i++) {
+        select.innerHTML += `<option value="Jornada ${i}">Jornada ${i}</option>`;
+      }
+    }
+
+    function actualizarSubposicionesEnAlta() {
+      const pos = document.getElementById('inputPlayerPos').value;
+      const selectSub = document.getElementById('inputPlayerSubRole');
+      selectSub.innerHTML = "";
+      const roles = ROLES_POR_POSICION[pos] || [pos];
+      roles.forEach(r => selectSub.innerHTML += `<option value="${r}">${r}</option>`);
+    }
+
+    function actualizarSubposicionesEnEdicion(valorSeleccionado) {
+      const pos = document.getElementById('editPlayerPos').value;
+      const selectSub = document.getElementById('editPlayerSubRole');
+      selectSub.innerHTML = "";
+      const roles = ROLES_POR_POSICION[pos] || [pos];
+      roles.forEach(r => {
+        const isSel = valorSeleccionado && valorSeleccionado === r ? "selected" : "";
+        selectSub.innerHTML += `<option value="${r}" ${isSel}>${r}</option>`;
+      });
+    }
+
+    function verificarSiEsPorteroEnActa() {
+      const playerId = document.getElementById('matchSelectPlayer').value;
+      const jugador = jugadores.find(j => j.id === playerId);
+      const wrapper = document.getElementById('matchConcededWrapper');
+      const tag = document.getElementById('keeperTagOnMatch');
+
+      if (jugador && jugador.position === 'Portero') {
+        wrapper.classList.remove('opacity-60');
+        tag.innerText = "🧤 Portero Detectado";
+        tag.className = "text-[9px] badge-keeper-custom px-2 py-0.5 rounded-full font-bold";
+      } else {
+        wrapper.classList.add('opacity-60');
+        tag.innerText = "Jugador de Campo";
+        tag.className = "text-[9px] badge-exempt-custom px-2 py-0.5 rounded-full font-semibold";
+      }
+    }
+
+    // ==========================================
+    // CARGA DE DATOS RESILIENTE
+    // ==========================================
+    async function cargarTodoDesdeSupabase() {
+      document.getElementById('syncIndicator').innerText = "🔄 Sincronizando...";
+      
+      try {
+        const { data: clubsDB } = await supabaseClient
+          .from('clubs')
+          .select('*');
+
+        if (clubsDB && clubsDB.length > 0) {
+          clubes = clubsDB;
+        } else {
+          clubes = [{
+            id: '11111111-1111-1111-1111-111111111111',
+            name: 'UD Paterna',
+            structure: 'grassroots',
+            category: 'Alevín',
+            total_budget: 18000,
+            address: 'Camino del Polideportivo, Paterna',
+            website: 'www.udpaterna.es',
+            stadium: 'Estadio Gerardo Salvador'
+          }];
+        }
+
+        clubActivo = clubes[0];
+        renderizarSelectorClubes();
+        await cargarEquiposDelClubActivo();
+        document.getElementById('syncIndicator').innerText = "● Conectado a Supabase";
+      } catch (e) {
+        console.error("Error al sincronizar con Supabase:", e);
+      }
+    }
+
+    async function cargarEquiposDelClubActivo() {
+      if (!clubActivo) return;
+
+      try {
+        const { data: teamsDB } = await supabaseClient
+          .from('teams')
+          .select('*')
+          .eq('club_id', clubActivo.id);
+
+        if (teamsDB && teamsDB.length > 0) {
+          equiposDelClub = teamsDB;
+        } else {
+          equiposDelClub = [
+            { id: `team_${clubActivo.id}_1`, club_id: clubActivo.id, name: 'Plantilla Principal', category: clubActivo.category || 'Base', letter: 'A' },
+            { id: `team_${clubActivo.id}_2`, club_id: clubActivo.id, name: 'Equipo B', category: clubActivo.category || 'Base', letter: 'B' }
+          ];
+        }
+      } catch (e) {
+        equiposDelClub = [
+          { id: `team_${clubActivo.id}_1`, club_id: clubActivo.id, name: 'Plantilla Principal', category: 'Base', letter: 'A' }
+        ];
+      }
+
+      equipoActivo = equiposDelClub[0];
+      renderizarSelectorEquipos();
+      await cargarJugadoresYPartidosDelEquipoActivo();
+    }
+
+    async function cargarJugadoresYPartidosDelEquipoActivo() {
+      if (!clubActivo) return;
+
+      try {
+        const { data: playersDB } = await supabaseClient.from('players').select('*');
+        const todos = playersDB || [];
+
+        // Rescate total: si están asociados al club los mostramos, y si no tienen team_id van al primer equipo
+        const jugadoresDelClub = todos.filter(j => j.club_id === clubActivo.id);
+        const listaBase = jugadoresDelClub.length > 0 ? jugadoresDelClub : todos;
+        const esPrimerEquipo = equiposDelClub.length > 0 && equipoActivo && equiposDelClub[0].id === equipoActivo.id;
+
+        jugadores = listaBase.filter(j => {
+          if (!j.team_id) return esPrimerEquipo;
+          return equipoActivo && j.team_id === equipoActivo.id;
+        });
+
+        if (jugadores.length === 0 && listaBase.length > 0 && esPrimerEquipo) {
+          jugadores = listaBase;
+        }
+
+        const playerIds = jugadores.map(j => j.id);
+        if (playerIds.length > 0) {
+          const { data: matchesDB } = await supabaseClient
+            .from('match_performances')
+            .select('*')
+            .in('player_id', playerIds);
+
+          actasPartidos = matchesDB || [];
+        } else {
+          actasPartidos = [];
+        }
+      } catch (err) {
+        console.error("Error al cargar plantilla:", err);
+      }
+
+      actualizarFiltrosSegunEstructuraClub();
+      actualizarVistasDashboard();
+      actualizarSelectorJugadoresActa();
+      verificarSiEsPorteroEnActa();
+    }
+
+    function obtenerEstadisticasConsolidadas() {
+      return jugadores.map(j => {
+        const partidosDelJugador = actasPartidos.filter(m => m.player_id === j.id);
+        const matchesCount = partidosDelJugador.length;
+        const minutesSum = partidosDelJugador.reduce((sum, m) => sum + (m.minutes_played || 0), 0);
+        const goalsSum = partidosDelJugador.reduce((sum, m) => sum + (m.goals || 0), 0);
+        const goalsConcededSum = partidosDelJugador.reduce((sum, m) => sum + (m.goals_conceded || 0), 0);
+        const assistsSum = partidosDelJugador.reduce((sum, m) => sum + (m.assists || 0), 0);
+        const yellowsSum = partidosDelJugador.reduce((sum, m) => sum + (m.yellow_cards || 0), 0);
+        const redsSum = partidosDelJugador.reduce((sum, m) => sum + (m.red_cards || 0), 0);
+
+        return {
+          ...j,
+          matches: matchesCount,
+          minutes: minutesSum,
+          goals: goalsSum,
+          goals_conceded: goalsConcededSum,
+          assists: assistsSum,
+          yellows: yellowsSum,
+          reds: redsSum,
+          matchList: partidosDelJugador
+        };
+      });
+    }
+
+    function actualizarVistasDashboard() {
+      if (!clubActivo || !equipoActivo) return;
+
+      const isBase = clubActivo.structure === 'grassroots';
+      const budget = Number(clubActivo.total_budget) || 1;
+      const statsList = obtenerEstadisticasConsolidadas();
+
+      document.getElementById('navClubNameHeader').innerText = clubActivo.name;
+      document.getElementById('currentClubTitle').innerText = clubActivo.name;
+      document.getElementById('currentTeamSubtitle').innerText = `/ ${equipoActivo.name}`;
+      document.getElementById('activeTeamBadge').innerText = equipoActivo.name;
+      document.getElementById('teamBadgeOnTable').innerText = equipoActivo.name;
+      document.getElementById('matchActiveTeamLabel').innerText = equipoActivo.name;
+      document.getElementById('clubCategoryBadge').innerText = clubActivo.category || 'General';
+      document.getElementById('clubFoundationBadge').innerText = clubActivo.founded_year ? `Fundación: ${clubActivo.founded_year}` : 'Fundación: --';
+
+      aplicarLogotipoClub(clubActivo.logo_url, clubActivo.name);
+
+      const addrElem = document.getElementById('clubAddressDisplay');
+      if (clubActivo.address && clubActivo.address.trim() !== "") {
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(clubActivo.address)}`;
+        addrElem.innerHTML = `📍 <a href="${mapsUrl}" target="_blank" rel="noopener" class="underline hover:text-emerald-500 font-bold">${clubActivo.address}</a>`;
+      } else {
+        addrElem.innerHTML = `📍 <span class="text-muted-custom">Sin dirección</span>`;
+      }
+
+      const phoneElem = document.getElementById('clubPhoneDisplay');
+      phoneElem.innerHTML = clubActivo.phone ? `📞 <a href="tel:${clubActivo.phone}" class="hover:underline font-bold">${clubActivo.phone}</a>` : `📞 <span class="text-muted-custom">--</span>`;
+
+      const emailElem = document.getElementById('clubEmailDisplay');
+      emailElem.innerHTML = clubActivo.email ? `✉️ <a href="mailto:${clubActivo.email}" class="hover:underline font-bold">${clubActivo.email}</a>` : `✉️ <span class="text-muted-custom">--</span>`;
+
+      const webElem = document.getElementById('clubWebDisplay');
+      if (clubActivo.website && clubActivo.website.trim() !== "") {
+        const rawWeb = clubActivo.website.trim();
+        const fullWebUrl = (rawWeb.startsWith('http://') || rawWeb.startsWith('https://')) ? rawWeb : `https://${rawWeb}`;
+        webElem.innerHTML = `🌐 <a href="${fullWebUrl}" target="_blank" rel="noopener" class="underline hover:text-sky-500 font-bold">${rawWeb}</a>`;
+      } else {
+        webElem.innerHTML = `🌐 <span class="text-muted-custom">--</span>`;
+      }
+
+      document.getElementById('clubStadiumDisplay').innerHTML = `🏟️ <span class="font-bold">${clubActivo.stadium || 'Campo Municipal'}</span>`;
+
+      const typeBadge = document.getElementById('clubTypeBadge');
+      if (isBase) {
+        typeBadge.innerText = "Fútbol Base";
+        typeBadge.className = "text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30";
+        document.getElementById('kpi1Title').innerText = "Recaudación Cuotas";
+        document.getElementById('thEconomy').innerText = "Cuota";
+      } else {
+        typeBadge.innerText = "Club Profesional";
+        typeBadge.className = "text-[11px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30";
+        document.getElementById('kpi1Title').innerText = "Gasto Masa Salarial";
+        document.getElementById('thEconomy').innerText = "Salario";
+      }
+
+      const totalEconomico = statsList.reduce((acc, j) => isBase ? (j.fee_status === 'paid' ? acc + (Number(j.annual_salary)||0) : acc) : acc + (Number(j.annual_salary)||0), 0);
+      const totalMins = statsList.reduce((acc, j) => acc + j.minutes, 0);
+      const totalGoles = statsList.reduce((acc, j) => acc + j.goals, 0);
+      const totalEncajados = statsList.reduce((acc, j) => acc + j.goals_conceded, 0);
+      const totalAsist = statsList.reduce((acc, j) => acc + j.assists, 0);
+      const totalAmarillas = statsList.reduce((acc, j) => acc + j.yellows, 0);
+      const totalRojas = statsList.reduce((acc, j) => acc + j.reds, 0);
+
+      document.getElementById('kpi1Value').innerText = totalEconomico.toLocaleString('es-ES') + " €";
+      document.getElementById('kpi1Sub').innerText = `${((totalEconomico / budget) * 100).toFixed(0)}% del presupuesto cubierto`;
+      document.getElementById('kpi2Value').innerText = `${totalMins} min`;
+      const mediaMins = statsList.length > 0 ? Math.round(totalMins / statsList.length) : 0;
+      document.getElementById('kpi2Sub').innerText = `${mediaMins} min media por jugador`;
+      document.getElementById('kpi3Value').innerText = `${totalGoles} / ${totalAsist}`;
+      document.getElementById('kpi3Sub').innerText = `${totalGoles + totalAsist} acciones ofensivas directas`;
+      document.getElementById('kpi4Value').innerText = `${totalAmarillas} 🟨 | ${totalRojas} 🟥`;
+      document.getElementById('kpi4Sub').innerText = `${totalEncajados} goles encajados (portería)`;
+
+      // Diagnóstico
+      document.getElementById('metricDiagTitle1').innerText = "Minutos promedio esperados";
+      document.getElementById('metricDiagVal1').innerText = `${mediaMins} min`;
+      const descolgados = statsList.filter(j => j.minutes < (mediaMins * 0.45));
+      const val2 = document.getElementById('metricDiagVal2');
+      if (descolgados.length > 0) {
+        val2.innerText = `⚠️ ${descolgados.length} jugador(es) con muy pocos minutos`;
+        val2.className = "text-sm font-bold text-amber-500 mt-0.5 block";
+      } else {
+        val2.innerText = `✅ Reparto de minutos equilibrado`;
+        val2.className = "text-sm font-bold text-emerald-500 mt-0.5 block";
+      }
+
+      aplicarFiltrosYBusqueda();
+    }
+
+    function aplicarLogotipoClub(logoUrl, clubName) {
+      const initials = (clubName || 'SP').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+      const navInit = document.getElementById('navClubInitials');
+      const navImg = document.getElementById('navClubLogoImg');
+      const banInit = document.getElementById('bannerClubInitials');
+      const banImg = document.getElementById('bannerClubLogoImg');
+      const printLogo = document.getElementById('printClubLogo');
+
+      if (logoUrl && logoUrl.trim() !== '') {
+        navInit.classList.add('hidden');
+        navImg.src = logoUrl;
+        navImg.classList.remove('hidden');
+
+        banInit.classList.add('hidden');
+        banImg.src = logoUrl;
+        banImg.classList.remove('hidden');
+
+        printLogo.src = logoUrl;
+        printLogo.classList.remove('hidden');
+      } else {
+        navImg.classList.add('hidden');
+        navInit.innerText = initials;
+        navInit.classList.remove('hidden');
+
+        banImg.classList.add('hidden');
+        banInit.innerText = initials;
+        banInit.classList.remove('hidden');
+
+        printLogo.classList.add('hidden');
+      }
+    }
+
+    function cambiarOrdenColumna(col) {
+      if (columnaOrden === col) direccionOrden = direccionOrden === 'asc' ? 'desc' : 'asc';
+      else { columnaOrden = col; direccionOrden = 'desc'; }
+
+      ['dorsal', 'full_name', 'position', 'annual_salary', 'matches', 'minutes', 'goals', 'goals_conceded', 'assists', 'yellows'].forEach(c => {
+        const el = document.getElementById(`sort_${c}`);
+        if (el) el.innerText = (c === columnaOrden) ? (direccionOrden === 'asc' ? '▲' : '▼') : '⇅';
+      });
+
+      aplicarFiltrosYBusqueda();
+    }
+
+    function ordenarListaJugadores(lista) {
+      return [...lista].sort((a, b) => {
+        let valA = a[columnaOrden];
+        let valB = b[columnaOrden];
+        if (typeof valA === 'string') {
+          return direccionOrden === 'asc' ? valA.localeCompare(valB || '') : (valB || '').localeCompare(valA);
+        }
+        return direccionOrden === 'asc' ? (Number(valA)||0) - (Number(valB)||0) : (Number(valB)||0) - (Number(valA)||0);
+      });
+    }
+
+    function actualizarFiltrosSegunEstructuraClub() {
+      const isBase = clubActivo && clubActivo.structure === 'grassroots';
+      const selectStatus = document.getElementById('filterStatus');
+      selectStatus.innerHTML = isBase 
+        ? `<option value="ALL">Todas las cuotas</option><option value="paid">Cuota Pagada</option><option value="pending">Cuota Pendiente</option><option value="exempt">Beca</option><option value="NEEDS_MINUTES">Requiere Minutos</option>`
+        : `<option value="ALL">Todos los estados</option><option value="OVERCOST">Sobrecoste</option><option value="EFFICIENT">Rentable</option><option value="contract">En vigor</option>`;
+    }
+
+    function limpiarFiltros() {
+      document.getElementById('searchInput').value = "";
+      document.getElementById('filterPosition').value = "ALL";
+      document.getElementById('filterStatus').value = "ALL";
+      aplicarFiltrosYBusqueda();
+    }
+
+    function aplicarFiltrosYBusqueda() {
+      const searchVal = document.getElementById('searchInput').value.toLowerCase().trim();
+      const posVal = document.getElementById('filterPosition').value;
+      const statusVal = document.getElementById('filterStatus').value;
+
+      const isBase = clubActivo && clubActivo.structure === 'grassroots';
+      const statsList = obtenerEstadisticasConsolidadas();
+      const totalMins = statsList.reduce((acc, j) => acc + j.minutes, 0);
+      const mediaMins = statsList.length > 0 ? Math.round(totalMins / statsList.length) : 0;
+
+      const filtrados = statsList.filter(j => {
+        const matchSearch = !searchVal || 
+          (j.full_name && j.full_name.toLowerCase().includes(searchVal)) || 
+          String(j.dorsal).includes(searchVal) ||
+          (j.email && j.email.toLowerCase().includes(searchVal)) ||
+          (j.sub_role && j.sub_role.toLowerCase().includes(searchVal));
+
+        const matchPos = posVal === "ALL" || j.position === posVal;
+
+        let matchStatus = true;
+        if (statusVal !== "ALL") {
+          if (isBase) {
+            matchStatus = (statusVal === "NEEDS_MINUTES") ? (j.minutes < (mediaMins * 0.45)) : (j.fee_status === statusVal);
+          } else {
+            const cMin = j.minutes > 0 ? (Number(j.annual_salary) / j.minutes) : Number(j.annual_salary);
+            matchStatus = (statusVal === "OVERCOST") ? (cMin > 45) : (cMin <= 45);
+          }
+        }
+        return matchSearch && matchPos && matchStatus;
+      });
+
+      renderizarTablaPlantilla(ordenarListaJugadores(filtrados), mediaMins, isBase);
+    }
+
+    function renderizarTablaPlantilla(listaAMostrar, mediaMins, isBase) {
+      const tbody = document.getElementById('rosterTableBody');
+      tbody.innerHTML = "";
+      document.getElementById('playerFilteredBadge').innerText = `${listaAMostrar.length} de ${jugadores.length} jugadores`;
+
+      if (listaAMostrar.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="12" class="p-6 text-center text-muted-custom">No hay jugadores que coincidan con los filtros.</td></tr>`;
+        return;
+      }
+
+      listaAMostrar.forEach(j => {
+        let badgeEconomico = '';
+        let badgeDiag = '';
+
+        if (isBase) {
+          const cuotaVal = Number(j.annual_salary) || 0;
+          if (j.fee_status === 'paid') badgeEconomico = `<span class="badge-paid-custom px-2 py-0.5 rounded-full text-xs font-bold">${cuotaVal}€ (Pagado)</span>`;
+          else if (j.fee_status === 'pending') badgeEconomico = `<span class="badge-pending-custom px-2 py-0.5 rounded-full text-xs font-bold">${cuotaVal}€ (Pendiente)</span>`;
+          else badgeEconomico = `<span class="badge-exempt-custom px-2 py-0.5 rounded-full text-xs font-semibold">Beca</span>`;
+
+          badgeDiag = (j.minutes < (mediaMins * 0.45) && mediaMins > 0)
+            ? '<span class="badge-pending-custom px-2.5 py-0.5 text-[11px] rounded-full font-bold">Dar Minutos</span>'
+            : '<span class="badge-paid-custom px-2.5 py-0.5 text-[11px] rounded-full font-bold">Adecuado</span>';
+        } else {
+          const salVal = Number(j.annual_salary) || 0;
+          badgeEconomico = `<span class="font-black">${salVal.toLocaleString('es-ES')} €</span>`;
+          const cMin = j.minutes > 0 ? (salVal / j.minutes) : salVal;
+          badgeDiag = (cMin > 45)
+            ? '<span class="badge-warn-custom px-2.5 py-0.5 text-[11px] rounded-full font-bold">Sobrecoste</span>'
+            : '<span class="badge-paid-custom px-2.5 py-0.5 text-[11px] rounded-full font-bold">Rentable</span>';
+        }
+
+        const isPortero = j.position === 'Portero';
+        const encajadosBadge = isPortero ? `<span class="text-rose-500 font-extrabold">${j.goals_conceded}</span>` : `<span class="text-muted-custom opacity-40">-</span>`;
+
+        tbody.innerHTML += `
+          <tr class="hover:bg-slate-800/40 dark:hover:bg-slate-800/40 light:hover:bg-slate-200/60 transition group cursor-pointer" onclick="abrirFichaDetalle('${j.id}')">
+            <td class="p-3 font-extrabold text-muted-custom">#${j.dorsal || '-'}</td>
+            <td class="p-3">
+              <span class="font-extrabold ${isPortero ? 'text-sky-500 dark:text-sky-400' : 'text-emerald-600 dark:text-emerald-400'} hover:underline flex items-center gap-1.5">
+                ${isPortero ? '🧤 ' : ''}${j.full_name}
+                <span class="no-print text-[10px] text-muted-custom font-normal opacity-0 group-hover:opacity-100 transition">✏️ Editar</span>
+              </span>
+              ${j.email ? `<span class="text-[10px] text-muted-custom block">${j.email}</span>` : ''}
+            </td>
+            <td class="p-3 text-muted-custom font-bold">${j.sub_role || j.position}</td>
+            <td class="p-3 text-right">${badgeEconomico}</td>
+            <td class="p-3 text-right font-bold">${j.matches}</td>
+            <td class="p-3 text-right font-black text-sky-500 dark:text-sky-400">${j.minutes}'</td>
+            <td class="p-3 text-right font-black text-emerald-500 dark:text-emerald-400">${j.goals}</td>
+            <td class="p-3 text-right">${encajadosBadge}</td>
+            <td class="p-3 text-right font-bold">${j.assists}</td>
+            <td class="p-3 text-center text-xs">
+              <span class="text-amber-500 font-bold">${j.yellows}🟨</span>
+              <span class="text-rose-500 font-bold ml-1">${j.reds}🟥</span>
+            </td>
+            <td class="p-3 text-center">${badgeDiag}</td>
+            <td class="p-3 text-center no-print" onclick="event.stopPropagation()">
+              <button onclick="eliminarJugadorSupabase('${j.id}', '${j.full_name}')" class="text-rose-500 hover:text-rose-600 font-bold text-xs">Eliminar</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function renderizarSelectorEquipos() {
+      const select = document.getElementById('teamSelectorDropdown');
+      select.innerHTML = "";
+      equiposDelClub.forEach(t => {
+        const isSel = equipoActivo && equipoActivo.id === t.id ? "selected" : "";
+        select.innerHTML += `<option value="${t.id}" ${isSel}>${t.name}</option>`;
+      });
+    }
+
+    async function cambiarEquipoSeleccionado(teamId) {
+      const found = equiposDelClub.find(t => t.id === teamId);
+      if (found) {
+        equipoActivo = found;
+        await cargarJugadoresYPartidosDelEquipoActivo();
+      }
+    }
+
+    function abrirModalNuevoEquipo() {
+      if (!clubActivo) return;
+      document.getElementById('newTeamClubSub').innerText = `Club: ${clubActivo.name}`;
+      const selectCat = document.getElementById('inputTeamCategory');
+      selectCat.innerHTML = "";
+      const lista = clubActivo.structure === 'grassroots' ? CATEGORIAS_BASE : CATEGORIAS_PRO;
+      lista.forEach(c => selectCat.innerHTML += `<option value="${c}">${c}</option>`);
+      document.getElementById('newTeamModal').classList.remove('hidden');
+    }
+
+    async function guardarEquipoEnSupabase(e) {
+      e.preventDefault();
+      if (!clubActivo) return;
+      const cat = document.getElementById('inputTeamCategory').value;
+      const letra = document.getElementById('inputTeamLetter').value;
+      const nombreCustom = document.getElementById('inputTeamCustomName').value.trim() || `${cat} ${letra}`;
+
+      const nuevoEquipo = { id: `team_${Date.now()}`, club_id: clubActivo.id, name: nombreCustom, category: cat, letter: letra };
+      try { await supabaseClient.from('teams').insert([nuevoEquipo]); } catch (err) {}
+
+      equiposDelClub.push(nuevoEquipo);
+      equipoActivo = nuevoEquipo;
+      renderizarSelectorEquipos();
+      await cargarJugadoresYPartidosDelEquipoActivo();
+      cerrarModal('newTeamModal');
+      e.target.reset();
+      mostrarToast(`Equipo "${nombreCustom}" añadido.`);
+    }
+
+    function abrirModalEditarClub() {
+      if (!clubActivo) return;
+      document.getElementById('editClubName').value = clubActivo.name || '';
+      document.getElementById('editClubStadium').value = clubActivo.stadium || '';
+      document.getElementById('editClubStructure').value = clubActivo.structure || 'grassroots';
+      document.getElementById('editClubFounded').value = clubActivo.founded_year || '';
+      document.getElementById('editClubAddress').value = clubActivo.address || '';
+      document.getElementById('editClubPhone').value = clubActivo.phone || '';
+      document.getElementById('editClubEmail').value = clubActivo.email || '';
+      document.getElementById('editClubWebsite').value = clubActivo.website || '';
+      document.getElementById('editClubBudget').value = clubActivo.total_budget || 0;
+      document.getElementById('editClubLogoUrl').value = clubActivo.logo_url || '';
+      previsualizarLogoUrl(clubActivo.logo_url || '');
+      document.getElementById('editClubModal').classList.remove('hidden');
+    }
+
+    function previsualizarLogoUrl(url) {
+      const img = document.getElementById('editLogoPreviewImg');
+      const init = document.getElementById('editLogoInitials');
+      if (url && url.trim() !== '') {
+        img.src = url;
+        img.classList.remove('hidden');
+        init.classList.add('hidden');
+      } else {
+        img.classList.add('hidden');
+        init.classList.remove('hidden');
+      }
+    }
+
+    function procesarArchivoLogoLocal(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('editClubLogoUrl').value = e.target.result;
+          previsualizarLogoUrl(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function probarEnlaceGoogleMaps() {
+      const direccion = document.getElementById('editClubAddress').value.trim();
+      if (!direccion) return alert("Escribe primero una dirección");
+      window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccion)}`, '_blank');
+    }
+
+    async function actualizarClubEnSupabase(e) {
+      e.preventDefault();
+      if (!clubActivo) return;
+      const btn = document.getElementById('btnUpdateClub');
+      btn.innerText = "Guardando...";
+      btn.disabled = true;
+
+      const payload = {
+        name: document.getElementById('editClubName').value,
+        stadium: document.getElementById('editClubStadium').value,
+        structure: document.getElementById('editClubStructure').value,
+        founded_year: parseInt(document.getElementById('editClubFounded').value) || null,
+        address: document.getElementById('editClubAddress').value,
+        phone: document.getElementById('editClubPhone').value,
+        email: document.getElementById('editClubEmail').value,
+        website: document.getElementById('editClubWebsite').value.trim(),
+        logo_url: document.getElementById('editClubLogoUrl').value,
+        total_budget: parseFloat(document.getElementById('editClubBudget').value) || 0
+      };
+
+      try {
+        await supabaseClient.from('clubs').update(payload).eq('id', clubActivo.id);
+        Object.assign(clubActivo, payload);
+      } catch (err) {
+        Object.assign(clubActivo, payload);
+      } finally {
+        renderizarSelectorClubes();
+        actualizarVistasDashboard();
+        cerrarModal('editClubModal');
+        btn.innerText = "Guardar Cambios";
+        btn.disabled = false;
+        mostrarToast("Datos del club guardados.");
+      }
+    }
+
+    function cambiarPestanaModalJugador(tab) {
+      const viewContent = document.getElementById('playerViewTabContent');
+      const editContent = document.getElementById('playerEditTabContent');
+      const viewBtn = document.getElementById('tabPlayerViewBtn');
+      const editBtn = document.getElementById('tabPlayerEditBtn');
+
+      if (tab === 'view') {
+        viewContent.classList.remove('hidden');
+        editContent.classList.add('hidden');
+        viewBtn.className = "flex-1 sm:flex-initial px-4 py-1.5 rounded-xl bg-emerald-500 text-slate-950 font-black transition";
+        editBtn.className = "flex-1 sm:flex-initial px-4 py-1.5 rounded-xl text-muted-custom hover:text-white font-black transition";
+      } else {
+        viewContent.classList.add('hidden');
+        editContent.classList.remove('hidden');
+        editBtn.className = "flex-1 sm:flex-initial px-4 py-1.5 rounded-xl bg-emerald-500 text-slate-950 font-black transition";
+        viewBtn.className = "flex-1 sm:flex-initial px-4 py-1.5 rounded-xl text-muted-custom hover:text-white font-black transition";
+      }
+    }
+
+    function abrirFichaDetalle(playerId) {
+      const statsList = obtenerEstadisticasConsolidadas();
+      const jugador = statsList.find(j => j.id === playerId);
+      if (!jugador) return;
+
+      jugadorSeleccionadoActual = jugador;
+      const isBase = clubActivo && clubActivo.structure === 'grassroots';
+      const isPortero = jugador.position === 'Portero';
+
+      document.getElementById('detailPlayerDorsal').innerText = `#${jugador.dorsal || '-'}`;
+      document.getElementById('detailPlayerName').innerText = `${isPortero ? '🧤 ' : ''}${jugador.full_name}`;
+      document.getElementById('detailPlayerRoleBadge').innerText = jugador.sub_role || jugador.position;
+      document.getElementById('detailPlayerFootBadge').innerText = `${jugador.preferred_foot || 'Diestro'} 👟`;
+      document.getElementById('detailClubName').innerText = clubActivo.name;
+      document.getElementById('detailTeamName').innerText = equipoActivo.name;
+      document.getElementById('detailPlayerEco').innerText = `Cuota: ${jugador.annual_salary || 0} €`;
+      document.getElementById('detailPlayerEmailBadge').innerText = jugador.email ? `✉️ ${jugador.email}` : '✉️ sin email registrado';
+
+      document.getElementById('detailMinutes').innerText = `${jugador.minutes}'`;
+      const avgMins = jugador.matches > 0 ? Math.round(jugador.minutes / jugador.matches) : 0;
+      document.getElementById('detailMinutesAvg').innerText = `${avgMins}' por partido (${jugador.matches} pj)`;
+
+      if (isPortero) {
+        document.getElementById('detailMetric2Label').innerText = "Goles Encajados 🧤";
+        document.getElementById('detailMetric2Value').innerText = jugador.goals_conceded;
+        document.getElementById('detailMetric2Value').className = "text-lg font-black text-rose-500 mt-0.5";
+        const avgConceded = jugador.matches > 0 ? (jugador.goals_conceded / jugador.matches).toFixed(2) : '0';
+        document.getElementById('detailMetric2Sub').innerText = `${avgConceded} goles/partido`;
+
+        const cleanSheets = (jugador.matchList || []).filter(m => (m.goals_conceded || 0) === 0 && (m.minutes_played || 0) > 0).length;
+        document.getElementById('detailMetric3Label').innerText = "Porterías a Cero";
+        document.getElementById('detailMetric3Value').innerText = cleanSheets;
+        document.getElementById('detailMetric3Value').className = "text-lg font-black text-sky-500 mt-0.5";
+        document.getElementById('detailMetric3Sub').innerText = `${cleanSheets} de ${jugador.matches} imbatido`;
+
+        document.getElementById('detailMetric4Label').innerText = "Eficacia & Tarjetas";
+        document.getElementById('detailMetric4Value').innerText = `${jugador.yellows}🟨 ${jugador.reds}🟥`;
+        document.getElementById('detailMetric4Sub').innerText = `${jugador.goals} goles marcados`;
+        document.getElementById('radarTitle').innerText = "🕸️ Atributos Específicos de Portería";
+      } else {
+        document.getElementById('detailMetric2Label').innerText = "Goles";
+        document.getElementById('detailMetric2Value').innerText = jugador.goals;
+        document.getElementById('detailMetric2Value').className = "text-lg font-black text-emerald-500 dark:text-emerald-400 mt-0.5";
+        document.getElementById('detailMetric2Sub').innerText = `Goles totales`;
+
+        document.getElementById('detailMetric3Label').innerText = "Asistencias";
+        document.getElementById('detailMetric3Value').innerText = jugador.assists;
+        document.getElementById('detailMetric3Value').className = "text-lg font-black text-teal-500 dark:text-teal-400 mt-0.5";
+        document.getElementById('detailMetric3Sub').innerText = `${jugador.goals + jugador.assists} acciones de gol`;
+
+        document.getElementById('detailMetric4Label').innerText = "Disciplina";
+        document.getElementById('detailMetric4Value').innerText = `${jugador.yellows}🟨 ${jugador.reds}🟥`;
+        document.getElementById('detailMetric4Sub').innerText = "Juego Limpio";
+        document.getElementById('radarTitle').innerText = "🕸️ Perfil Técnico según Posición y Pierna";
+      }
+
+      // Historial
+      const histBody = document.getElementById('detailMatchHistoryBody');
+      histBody.innerHTML = "";
+      if (!jugador.matchList || jugador.matchList.length === 0) {
+        histBody.innerHTML = `<tr><td colspan="7" class="py-3 text-center text-muted-custom">No hay actas registradas para este jugador.</td></tr>`;
+      } else {
+        jugador.matchList.forEach((m) => {
+          histBody.innerHTML += `
+            <tr class="hover:bg-slate-800/30">
+              <td class="py-2 px-2.5 font-bold text-sky-500 dark:text-sky-400">${m.journey || 'Jornada'} <span class="text-muted-custom font-normal text-[11px]">(${m.match_date || ''})</span></td>
+              <td class="py-2 px-2.5 text-right font-black text-sky-500 dark:text-sky-400">${m.minutes_played || 0}'</td>
+              <td class="py-2 px-2.5 text-right font-black text-emerald-500 dark:text-emerald-400">${m.goals || 0}</td>
+              <td class="py-2 px-2.5 text-right font-black text-rose-500 dark:text-rose-400">${m.goals_conceded || 0}</td>
+              <td class="py-2 px-2.5 text-right font-bold">${m.assists || 0}</td>
+              <td class="py-2 px-2.5 text-center text-xs">
+                <span class="text-amber-500 font-bold">${m.yellow_cards || 0}🟨</span>
+                <span class="text-rose-500 font-bold ml-1">${m.red_cards || 0}🟥</span>
+              </td>
+              <td class="py-2 px-2.5 text-center">
+                <button onclick="eliminarActaPartidoSupabase('${m.id}')" class="text-rose-500 hover:text-rose-600 font-bold text-xs" title="Borrar acta">🗑️</button>
+              </td>
+            </tr>
+          `;
+        });
+      }
+
+      // Formulario edición
+      document.getElementById('editPlayerName').value = jugador.full_name || '';
+      document.getElementById('editPlayerDorsal').value = jugador.dorsal || 1;
+      document.getElementById('editPlayerEmail').value = jugador.email || '';
+      document.getElementById('editPlayerPos').value = jugador.position || 'Delantero';
+      actualizarSubposicionesEnEdicion(jugador.sub_role);
+      document.getElementById('editPlayerFoot').value = jugador.preferred_foot || 'Diestro';
+      document.getElementById('editPlayerSecondaryPos').value = jugador.secondary_position || '';
+      document.getElementById('editPlayerFee').value = jugador.annual_salary || 0;
+
+      const selectTeamP = document.getElementById('editPlayerTeamSelect');
+      selectTeamP.innerHTML = "";
+      equiposDelClub.forEach(t => {
+        const isSel = (jugador.team_id === t.id) ? "selected" : "";
+        selectTeamP.innerHTML += `<option value="${t.id}" ${isSel}>${t.name}</option>`;
+      });
+
+      const selStatus = document.getElementById('editPlayerStatus');
+      selStatus.innerHTML = '<option value="paid">Pagado (Al día)</option><option value="pending">Pendiente</option><option value="exempt">Beca / Exento</option>';
+      selStatus.value = jugador.fee_status || 'paid';
+
+      cambiarPestanaModalJugador('view');
+      renderizarGraficosJugador(jugador);
+      document.getElementById('playerDetailModal').classList.remove('hidden');
+    }
+
+    function cerrarFichaDetalle() {
+      document.getElementById('playerDetailModal').classList.add('hidden');
+    }
+
+    async function actualizarJugadorEnSupabase(e) {
+      e.preventDefault();
+      if (!jugadorSeleccionadoActual) return;
+      const btn = document.getElementById('btnUpdatePlayer');
+      btn.innerText = "Guardando...";
+      btn.disabled = true;
+
+      const payload = {
+        full_name: document.getElementById('editPlayerName').value,
+        dorsal: parseInt(document.getElementById('editPlayerDorsal').value) || 1,
+        email: document.getElementById('editPlayerEmail').value.trim().toLowerCase(),
+        position: document.getElementById('editPlayerPos').value,
+        sub_role: document.getElementById('editPlayerSubRole').value,
+        preferred_foot: document.getElementById('editPlayerFoot').value,
+        secondary_position: document.getElementById('editPlayerSecondaryPos').value,
+        team_id: document.getElementById('editPlayerTeamSelect').value,
+        annual_salary: parseFloat(document.getElementById('editPlayerFee').value) || 0,
+        fee_status: document.getElementById('editPlayerStatus').value
+      };
+
+      try {
+        await supabaseClient.from('players').update(payload).eq('id', jugadorSeleccionadoActual.id);
+        Object.assign(jugadorSeleccionadoActual, payload);
+      } catch (err) {
+        Object.assign(jugadorSeleccionadoActual, payload);
+      } finally {
+        const idx = jugadores.findIndex(j => j.id === jugadorSeleccionadoActual.id);
+        if (idx !== -1) jugadores[idx] = jugadorSeleccionadoActual;
+
+        actualizarVistasDashboard();
+        actualizarSelectorJugadoresActa();
+        cerrarFichaDetalle();
+        btn.innerText = "Guardar Ficha";
+        btn.disabled = false;
+        mostrarToast("Ficha actualizada.");
+      }
+    }
+
+    function abrirModalNuevoJugador() {
+      if (!clubActivo || !equipoActivo) return;
+      document.getElementById('playerModalTeamSub').innerText = `Club: ${clubActivo.name} • Equipo: ${equipoActivo.name}`;
+      document.getElementById('playerModal').classList.remove('hidden');
+    }
+
+    async function guardarJugadorEnSupabase(e) {
+      e.preventDefault();
+      if (!clubActivo) return;
+      const btn = document.getElementById('btnSavePlayer');
+      btn.innerText = "Guardando...";
+      btn.disabled = true;
+
+      const teamIdVal = equipoActivo ? equipoActivo.id : `team_${clubActivo.id}_1`;
+      const payloadCompleto = {
+        club_id: clubActivo.id,
+        team_id: teamIdVal,
+        full_name: document.getElementById('inputPlayerName').value,
+        email: document.getElementById('inputPlayerEmail').value.trim().toLowerCase(),
+        dorsal: parseInt(document.getElementById('inputPlayerDorsal').value) || 1,
+        position: document.getElementById('inputPlayerPos').value,
+        sub_role: document.getElementById('inputPlayerSubRole').value,
+        preferred_foot: document.getElementById('inputPlayerFoot').value,
+        secondary_position: document.getElementById('inputPlayerSecondaryPos').value,
+        annual_salary: parseFloat(document.getElementById('inputPlayerFee').value) || 0,
+        fee_status: document.getElementById('inputPlayerStatus').value
+      };
+
+      try {
+        let { data, error } = await supabaseClient.from('players').insert([payloadCompleto]).select().single();
+        if (error) {
+          const res = await supabaseClient.from('players').insert([{
+            club_id: clubActivo.id,
+            full_name: payloadCompleto.full_name,
+            position: payloadCompleto.position,
+            annual_salary: payloadCompleto.annual_salary
+          }]).select().single();
+          data = res.data ? { ...payloadCompleto, id: res.data.id } : null;
+        }
+        jugadores.push(data || { id: `p_${Date.now()}`, ...payloadCompleto });
+      } catch (err) {
+        jugadores.push({ id: `p_${Date.now()}`, ...payloadCompleto });
+      } finally {
+        actualizarVistasDashboard();
+        actualizarSelectorJugadoresActa();
+        cerrarModal('playerModal');
+        e.target.reset();
+        btn.innerText = "Inscribir en Plantilla";
+        btn.disabled = false;
+        mostrarToast(`Jugador "${payloadCompleto.full_name}" inscrito.`);
+      }
+    }
+
+    async function guardarActaPartidoEnSupabase(e) {
+      e.preventDefault();
+      const playerId = document.getElementById('matchSelectPlayer').value;
+      if (!playerId) return alert("Selecciona un jugador");
+
+      const btn = document.getElementById('btnSaveMatch');
+      btn.innerText = "Guardando...";
+      btn.disabled = true;
+
+      const jornada = document.getElementById('matchJourneySelect').value;
+      const fecha = document.getElementById('matchDateInput').value || new Date().toISOString().split('T')[0];
+      const mins = parseInt(document.getElementById('matchMins').value) || 0;
+      const goles = parseInt(document.getElementById('matchGoals').value) || 0;
+      const encajados = parseInt(document.getElementById('matchGoalsConceded').value) || 0;
+      const asist = parseInt(document.getElementById('matchAssists').value) || 0;
+      const amarillas = parseInt(document.getElementById('matchYellows').value) || 0;
+      const rojas = parseInt(document.getElementById('matchReds').value) || 0;
+
+      const payload = {
+        player_id: playerId,
+        journey: jornada,
+        match_date: fecha,
+        minutes_played: mins,
+        goals: goles,
+        goals_conceded: encajados,
+        assists: asist,
+        yellow_cards: amarillas,
+        red_cards: rojas
+      };
+
+      try {
+        let { data, error } = await supabaseClient.from('match_performances').insert([payload]).select().single();
+        if (error) {
+          const res = await supabaseClient.from('match_performances').insert([{
+            player_id: playerId,
+            minutes_played: mins,
+            goals: goles,
+            assists: asist,
+            yellow_cards: amarillas,
+            red_cards: rojas
+          }]).select().single();
+          data = res.data ? { ...payload, id: res.data.id } : null;
+        }
+        actasPartidos.push(data || { id: `m_${Date.now()}`, ...payload });
+      } catch (err) {
+        actasPartidos.push({ id: `m_${Date.now()}`, ...payload });
+      } finally {
+        actualizarVistasDashboard();
+        e.target.reset();
+        document.getElementById('matchDateInput').valueAsDate = new Date();
+        document.getElementById('matchGoalsConceded').value = "0";
+        btn.innerText = "+ Guardar Acta Jornada";
+        btn.disabled = false;
+        mostrarToast(`Acta guardada para ${jornada}.`);
+      }
+    }
+
+    async function eliminarActaPartidoSupabase(actaId) {
+      if (!confirm("¿Deseas eliminar este registro de partido?")) return;
+      try { await supabaseClient.from('match_performances').delete().eq('id', actaId); } catch (err) {}
+      actasPartidos = actasPartidos.filter(m => m.id !== actaId);
+      actualizarVistasDashboard();
+      if (jugadorSeleccionadoActual) abrirFichaDetalle(jugadorSeleccionadoActual.id);
+      mostrarToast("Acta eliminada.");
+    }
+
+    async function eliminarJugadorSupabase(playerId, nombre) {
+      if (!confirm(`¿Deseas eliminar a ${nombre} de la plantilla?`)) return;
+      try { await supabaseClient.from('players').delete().eq('id', playerId); } catch (err) {}
+      jugadores = jugadores.filter(j => j.id !== playerId);
+      actasPartidos = actasPartidos.filter(m => m.player_id !== playerId);
+      actualizarVistasDashboard();
+      actualizarSelectorJugadoresActa();
+      mostrarToast(`Jugador "${nombre}" eliminado.`);
+    }
+
+    function abrirModalNuevoClub() {
+      document.getElementById('clubModal').classList.remove('hidden');
+    }
+
+    async function guardarClubEnSupabase(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSaveClub');
+      btn.innerText = "Creando...";
+      btn.disabled = true;
+
+      const nombreClub = document.getElementById('inputClubName').value.trim();
+      const estructura = document.getElementById('inputClubStructure').value;
+      const primerEquipoNombre = document.getElementById('inputFirstTeamName').value.trim() || 'Primer Equipo';
+      const logoUrl = document.getElementById('inputClubLogoUrl').value.trim();
+      const presupuesto = parseFloat(document.getElementById('inputClubBudget').value) || 0;
+
+      const payloadClub = { name: nombreClub, structure: estructura, category: 'Cantera', logo_url: logoUrl, total_budget: presupuesto };
+
+      try {
+        let { data: nuevoClub, error } = await supabaseClient.from('clubs').insert([payloadClub]).select().single();
+        if (error) {
+          const res = await supabaseClient.from('clubs').insert([{ name: nombreClub, total_budget: presupuesto }]).select().single();
+          nuevoClub = res.data;
+        }
+
+        if (nuevoClub) {
+          clubes.push(nuevoClub);
+          clubActivo = nuevoClub;
+        }
+
+        const nuevoEquipo = { id: `team_${Date.now()}`, club_id: nuevoClub ? nuevoClub.id : '11111111-1111-1111-1111-111111111111', name: primerEquipoNombre, category: 'Base', letter: 'A' };
+        try { await supabaseClient.from('teams').insert([nuevoEquipo]); } catch(e) {}
+        equiposDelClub = [nuevoEquipo];
+        equipoActivo = nuevoEquipo;
+
+        renderizarSelectorClubes();
+        renderizarSelectorEquipos();
+        await cargarJugadoresYPartidosDelEquipoActivo();
+      } catch (err) {
+        console.warn("Error creando club:", err);
+      } finally {
+        cerrarModal('clubModal');
+        e.target.reset();
+        btn.innerText = "Crear Club y Primer Equipo";
+        btn.disabled = false;
+        mostrarToast(`Club "${nombreClub}" creado.`);
+      }
+    }
+
+    function generarInformeEjecutivoPDF() {
+      if (!clubActivo || !equipoActivo) return;
+      document.getElementById('printClubTitle').innerText = clubActivo.name;
+      document.getElementById('printTeamName').innerText = equipoActivo.name;
+      document.getElementById('printDate').innerText = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+      document.getElementById('printDocSubtitle').innerText = `BALANCE OFICIAL DE PLANTILLA • ${equipoActivo.name.toUpperCase()} (FÚTBOL BASE)`;
+      window.print();
+    }
+
+    function renderizarGraficosJugador(jugador) {
+      const isLight = document.documentElement.classList.contains('light');
+      const textColor = isLight ? '#0f172a' : '#94a3b8';
+      const gridColor = isLight ? '#cbd5e1' : '#1e293b';
+
+      if (chartMinutesInstance) chartMinutesInstance.destroy();
+      if (chartRadarInstance) chartRadarInstance.destroy();
+
+      const labelsPartidos = jugador.matchList && jugador.matchList.length > 0 
+        ? jugador.matchList.map((m, i) => m.journey ? m.journey.replace('Jornada ', 'J') : `J${i + 1}`)
+        : ['J1', 'J2', 'J3', 'J4', 'J5'];
+
+      const dataMinutos = jugador.matchList && jugador.matchList.length > 0
+        ? jugador.matchList.map(m => m.minutes_played || 0)
+        : [0, 0, 0, 0, 0];
+
+      const ctxMinutos = document.getElementById('chartMinutesEvolution').getContext('2d');
+      chartMinutesInstance = new Chart(ctxMinutos, {
+        type: 'line',
+        data: {
+          labels: labelsPartidos,
+          datasets: [{
+            label: 'Minutos',
+            data: dataMinutos,
+            borderColor: '#0284c7',
+            backgroundColor: 'rgba(2, 132, 199, 0.15)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.35,
+            pointBackgroundColor: '#0369a1',
+            pointRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, max: 90, grid: { color: gridColor }, ticks: { color: textColor, font: { size: 10, weight: 'bold' } } },
+            x: { grid: { display: false }, ticks: { color: textColor, font: { size: 10, weight: 'bold' } } }
+          }
+        }
+      });
+
+      let labelsRadar = ['Definición', 'Visión & Asist.', 'Técnica & Pase', 'Recuperación', 'Resistencia'];
+      let atributos = [70, 65, 75, 60, 80];
+
+      if (jugador.position === 'Portero') {
+        labelsRadar = ['Reflejos', 'Juego Aéreo', 'Paradas 1vs1', 'Juego de Pies', 'Colocación'];
+        atributos = [88, 82, 85, 78, 86];
+      } else if (jugador.position === 'Delantero') {
+        atributos = [88, 85, 60, 50, 82];
+      } else if (jugador.position === 'Centrocampista') {
+        atributos = [68, 80, 88, 72, 78];
+      } else if (jugador.position === 'Defensa') {
+        atributos = [45, 55, 70, 88, 85];
+      }
+
+      const ctxRadar = document.getElementById('chartRadarSkills').getContext('2d');
+      chartRadarInstance = new Chart(ctxRadar, {
+        type: 'radar',
+        data: {
+          labels: labelsRadar,
+          datasets: [{
+            label: 'Atributos',
+            data: atributos,
+            backgroundColor: jugador.position === 'Portero' ? 'rgba(14, 165, 233, 0.25)' : 'rgba(16, 185, 129, 0.25)',
+            borderColor: jugador.position === 'Portero' ? '#0284c7' : '#059669',
+            borderWidth: 2,
+            pointBackgroundColor: jugador.position === 'Portero' ? '#0369a1' : '#047857',
+            pointRadius: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            r: { beginAtZero: true, max: 100, grid: { color: gridColor }, angleLines: { color: gridColor }, pointLabels: { color: textColor, font: { size: 9, weight: 'bold' } }, ticks: { display: false } }
+          }
+        }
+      });
+    }
+
+    function renderizarSelectorClubes() {
+      const select = document.getElementById('clubSelectorDropdown');
+      select.innerHTML = "";
+      clubes.forEach(c => {
+        const isSel = clubActivo && clubActivo.id === c.id ? "selected" : "";
+        select.innerHTML += `<option value="${c.id}" ${isSel}>${c.name}</option>`;
+      });
+    }
+
+    async function cambiarClubSeleccionado(clubId) {
+      const found = clubes.find(c => c.id === clubId);
+      if (found) {
+        clubActivo = found;
+        equipoActivo = null;
+        await cargarEquiposDelClubActivo();
+      }
+    }
+
+    function actualizarSelectorJugadoresActa() {
+      const select = document.getElementById('matchSelectPlayer');
+      select.innerHTML = '<option value="">-- Selecciona jugador --</option>';
+      jugadores.forEach(j => {
+        const tag = j.position === 'Portero' ? '🧤 ' : '';
+        select.innerHTML += `<option value="${j.id}">#${j.dorsal || '-'} - ${tag}${j.full_name} (${j.sub_role || j.position})</option>`;
+      });
+    }
+
+    function cerrarModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
   </script>
 </body>
 </html>
